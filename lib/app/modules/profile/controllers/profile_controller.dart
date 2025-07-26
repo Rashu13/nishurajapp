@@ -13,6 +13,10 @@ class ProfileController extends GetxController {
   var whenOrderIsDelivered = true.obs;
   var whenOrderAlert = true.obs;
   var twoStepVerification = true.obs;
+
+  get waiterInfo => null;
+
+  get performance => null;
   
   void toggleNotification(String type, bool value) {
     switch (type) {
@@ -46,4 +50,16 @@ class ProfileController extends GetxController {
     // Handle password change
     Get.snackbar('Password', 'Change password functionality');
   }
+
+  void editPersonalInfo() {}
+
+  void notificationSettings() {}
+
+  void aboutApp() {}
+
+  void helpSupport() {}
+
+  void changeLanguage() {}
+
+  void logout() {}
 }

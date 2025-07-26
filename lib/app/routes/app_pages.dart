@@ -2,7 +2,6 @@ import 'package:get/get.dart';
 import '../modules/splash/views/splash_view.dart';
 import '../modules/onboarding/views/onboarding_view.dart';
 import '../modules/home/views/home_view.dart';
-import '../modules/table_management/views/table_management_view.dart';
 import '../modules/table_management/bindings/table_management_binding.dart';
 import '../modules/menu/views/menu_view.dart';
 import '../modules/menu/views/menu_detail_view.dart';
@@ -26,6 +25,7 @@ import '../modules/profile/views/profile_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/analytics/views/analytics_view.dart';
 import '../modules/analytics/bindings/analytics_binding.dart';
+import '../modules/table_management/views/table_management_view_new.dart' show TableManagementView;
 import 'app_routes.dart';
 
 class AppPages {

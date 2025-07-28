@@ -1,84 +1,134 @@
 import 'package:get/get.dart';
+import '../../../data/models/table_model.dart';
+import '../../../data/repositories/table_repository.dart';
 
 class TableManagementController extends GetxController {
-  var selectedTab = 0.obs;
-  var tables = <TableAssignment>[].obs;
-
+  final TableRepository _tableRepository = Get.find<TableRepository>();
+  
+  // Observables
+  final RxInt selectedTab = 0.obs;
+  final RxList<TableModel> tables = <TableModel>[].obs;
+  final RxBool isLoading = false.obs;
+  final RxBool isLoadingMore = false.obs;
+  final RxBool hasError = false.obs;
+  final RxString errorMessage = ''.obs;
+  
+  // Pagination
+  bool get hasMoreData => _tableRepository.hasMoreData;
+  
   @override
   void onInit() {
     super.onInit();
-    loadTableAssignments();
+    loadTables();
   }
-
-  void loadTableAssignments() {
-    tables.value = [
-      TableAssignment(
-        tableNumber: '05',
-        waiterName: 'Raman Shetty',
-        guests: 4,
-        time: '2:00 pm',
-        status: TableStatus.occupied,
-      ),
-      TableAssignment(
-        tableNumber: '06',
-        waiterName: 'Hari Sahu',
-        guests: 2,
-        time: '12:30 pm',
-        status: TableStatus.occupied,
-      ),
-      TableAssignment(
-        tableNumber: '04',
-        waiterName: 'Aaron Michelle',
-        guests: 2,
-        time: '2:00 pm',
-        status: TableStatus.available,
-      ),
-      TableAssignment(
-        tableNumber: '08',
-        waiterName: 'Veda Shrinivas',
-        guests: 4,
-        time: '1:00 pm',
-        status: TableStatus.available,
-      ),
-      TableAssignment(
-        tableNumber: '09',
-        waiterName: 'Shreya pillai',
-        guests: 3,
-        time: '1:30 pm',
-        status: TableStatus.available,
-      ),
-      TableAssignment(
-        tableNumber: '10',
-        waiterName: 'Tanya Soni',
-        guests: 4,
-        time: '2:00 pm',
-        status: TableStatus.available,
-      ),
-    ];
+  
+  // Load initial tables
+  Future<void> loadTables() async {
+    if (isLoading.value) return;
+    
+    isLoading.value = true;
+    hasError.value = false;
+    errorMessage.value = '';
+    
+    try {
+      await _tableRepository.loadTables();
+      
+      // Apply filter based on current tab
+      _applyTabFilter(selectedTab.value);
+    } catch (e) {
+      hasError.value = true;
+      errorMessage.value = 'Failed to load tables: ${e.toString()}';
+      print('Error loading tables: ${e.toString()}');
+    } finally {
+      isLoading.value = false;
+    }
   }
-
+  
+  // Apply filtering based on selected tab
+  void _applyTabFilter(int tabIndex) {
+    if (tabIndex == 0) {
+      // All tables
+      tables.value = _tableRepository.tables;
+    } else if (tabIndex == 1) {
+      // Available tables only (status = true)
+      tables.value = _tableRepository.tables.where((table) => table.status).toList();
+    } else if (tabIndex == 2) {
+      // Occupied tables only (status = false)
+      tables.value = _tableRepository.tables.where((table) => !table.status).toList();
+    }
+  }
+  
+  // Load more tables (pagination)
+  Future<void> loadMoreTables() async {
+    if (isLoadingMore.value || !hasMoreData) return;
+    
+    isLoadingMore.value = true;
+    
+    try {
+      await _tableRepository.loadMoreTables();
+      // Update the tables list from the repository
+      tables.value = _tableRepository.tables;
+    } catch (e) {
+      print('Error loading more tables: ${e.toString()}');
+      // Show a snackbar but don't set hasError since we still show existing tables
+      Get.snackbar(
+        'Error', 
+        'Failed to load more tables',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoadingMore.value = false;
+    }
+  }
+  
+  // Refresh tables
+  Future<void> refreshTables() async {
+    _tableRepository.clearCache();
+    await loadTables();
+    // _applyTabFilter is already called in loadTables
+  }
+  
+  // Select/deselect table
+  void toggleTableSelection(TableModel table) {
+    _tableRepository.updateTableSelection(table.tableId, !table.isSelected);
+    update(); // Force UI update
+  }
+  
+  // Update table status (occupied/available)
+  Future<void> updateTableStatus(TableModel table, bool newStatus) async {
+    try {
+      final success = await _tableRepository.updateTableStatus(table.tableId, newStatus);
+      if (success) {
+        Get.snackbar(
+          'Success', 
+          'Table ${table.tableName} status updated',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else {
+        Get.snackbar(
+          'Error', 
+          'Failed to update table status',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error', 
+        'An error occurred: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+  
+  // Change selected tab
   void selectTab(int index) {
     selectedTab.value = index;
+    _applyTabFilter(index);
   }
-}
-
-class TableAssignment {
-  final String tableNumber;
-  final String waiterName;
-  final int guests;
-  final String time;
-  final TableStatus status;
-
-  TableAssignment({
-    required this.tableNumber,
-    required this.waiterName,
-    required this.guests,
-    required this.time,
-    required this.status,
-  });
-}
-
-enum TableStatus {
-  occupied,
-  available,
+  
+  @override
+  void onClose() {
+    // Clear any resources if needed
+    super.onClose();
+  }
 }

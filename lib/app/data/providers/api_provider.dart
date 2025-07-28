@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart' as dio;
 import 'package:dio/dio.dart' hide Response;
-import 'package:get/get.dart';
 
 class ApiProvider {
   static const String baseUrl = 'http://192.168.1.6:44351/api'; // Replace with actual API URL

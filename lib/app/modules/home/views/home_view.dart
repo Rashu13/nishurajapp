@@ -3,14 +3,13 @@ import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import '../../../routes/app_routes.dart';
 import '../../../widgets/common_bottom_navigation_bar.dart';
+import '../../../data/models/table_model.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Get.put(HomeController());
-    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -101,41 +100,69 @@ class HomeView extends GetView<HomeController> {
             const SizedBox(height: 16),
             
             Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  childAspectRatio: 1,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemCount: 12,
-                itemBuilder: (context, index) {
-                  final tableNumber = (index + 1).toString().padLeft(2, '0');
-                  final isOccupied = [2, 7, 8].contains(index);
-                  return _buildTableCard(tableNumber, isOccupied);
-                },
-              ),
+              child: Obx(() {
+                if (controller.isTablesLoading.value) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFFF6B35),
+                    ),
+                  );
+                }
+                
+                if (controller.tables.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No tables available',
+                      style: TextStyle(
+                        color: Color(0xFF6C757D),
+                        fontSize: 16,
+                      ),
+                    ),
+                  );
+                }
+                
+                // Display all available tables for home view
+                final displayTables = controller.tables;
+                
+                return Column(
+                  children: [
+                    // Show table count info
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        'Total Tables: ${displayTables.length}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF6C757D),
+                        ),
+                      ),
+                    ),
+                    
+                    Expanded(
+                      child: GridView.builder(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 1,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                        itemCount: displayTables.length,
+                        itemBuilder: (context, index) {
+                          final table = displayTables[index];
+                          // Show table name instead of numbers, and use actual status
+                          return _buildTableCard(table.tableName, !table.status, table);
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }),
             ),
             
             const SizedBox(height: 16),
             
             // Add table button
-            Center(
-              child: TextButton.icon(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.add,
-                  color: Color(0xFFFF6B35),
-                ),
-                label: const Text(
-                  'Add Table',
-                  style: TextStyle(
-                    color: Color(0xFFFF6B35),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
+            
           ],
         ),
       ),
@@ -156,21 +183,22 @@ class HomeView extends GetView<HomeController> {
       child: Text(
         title,
         style: TextStyle(
+          overflow: TextOverflow.ellipsis,
           color: isActive ? Colors.white : Colors.grey[600],
           fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-          fontSize: 14,
+          fontSize: 12,
         ),
       ),
     );
   }
 
-  Widget _buildTableCard(String tableNumber, bool isOccupied) {
+  Widget _buildTableCard(String tableNumber, bool isOccupied, [TableModel? table]) {
     return GestureDetector(
       onTap: () {
         if (isOccupied) {
           controller.navigateToMenu();
         } else {
-          _showTableDialog(tableNumber);
+          _showTableDialog(tableNumber, table);
         }
       },
       child: Container(
@@ -185,8 +213,10 @@ class HomeView extends GetView<HomeController> {
         child: Center(
           child: Text(
             tableNumber,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
               color: isOccupied ? Colors.white : Colors.grey[600],
             ),
@@ -196,7 +226,7 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  void _showTableDialog(String tableNumber) {
+  void _showTableDialog(String tableNumber, [TableModel? table]) {
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -226,7 +256,7 @@ class HomeView extends GetView<HomeController> {
               const SizedBox(height: 24),
               
               Text(
-                'Table No: $tableNumber',
+                'Table: $tableNumber',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -237,11 +267,11 @@ class HomeView extends GetView<HomeController> {
               const SizedBox(height: 32),
               
               // Guest counter
-              Row(
+              Obx(() => Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () => controller.decrementGuest(),
                     child: Container(
                       width: 40,
                       height: 40,
@@ -255,18 +285,18 @@ class HomeView extends GetView<HomeController> {
                   
                   const SizedBox(width: 32),
                   
-                  const Column(
+                  Column(
                     children: [
                       Text(
-                        '4',
-                        style: TextStyle(
+                        '${controller.guestCount.value}',
+                        style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF2D3142),
                         ),
                       ),
-                      Text(
-                        'Guest',
+                      const Text(
+                        'Guests',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
@@ -278,7 +308,7 @@ class HomeView extends GetView<HomeController> {
                   const SizedBox(width: 32),
                   
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () => controller.incrementGuest(),
                     child: Container(
                       width: 40,
                       height: 40,
@@ -290,7 +320,7 @@ class HomeView extends GetView<HomeController> {
                     ),
                   ),
                 ],
-              ),
+              )),
               
               const SizedBox(height: 40),
               

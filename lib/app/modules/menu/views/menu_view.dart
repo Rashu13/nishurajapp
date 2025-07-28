@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/menu_controller.dart';
-import '../../../data/models/menu_item.dart';
+import '../../../data/models/menu_model.dart';
 
 class MenuView extends GetView<MenuPageController> {
   const MenuView({super.key});
@@ -291,7 +291,7 @@ class MenuView extends GetView<MenuPageController> {
     );
   }
 
-  Widget _buildMenuItemCard(MenuItem item) {
+  Widget _buildMenuItemCard(MenuModel item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -323,7 +323,7 @@ class MenuView extends GetView<MenuPageController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.name,
+                  item.itemName,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -342,7 +342,7 @@ class MenuView extends GetView<MenuPageController> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${item.preparationTime} Minutes',
+                      '15 Minutes', // Default value since MenuModel doesn't have preparationTime
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -356,7 +356,7 @@ class MenuView extends GetView<MenuPageController> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${(item.price * 0.1).toInt()} Calories',
+                      '${((double.tryParse(item.restrorate) ?? 0.0) * 0.1).toInt()} Calories',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -371,7 +371,7 @@ class MenuView extends GetView<MenuPageController> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '₹ ${item.price.toInt()}',
+                      '₹ ${(double.tryParse(item.restrorate) ?? 0.0).toInt()}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

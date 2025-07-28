@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../data/models/menu_item.dart';
+import '../../../data/models/menu_model.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../routes/app_routes.dart';
 
@@ -8,8 +8,8 @@ class MenuPageController extends GetxController {
   final MenuRepository _menuRepository = MenuRepository();
   
   var isLoading = false.obs;
-  var menuItems = <MenuItem>[].obs;
-  var cartItems = <MenuItem, int>{}.obs;
+  var menuItems = <MenuModel>[].obs;
+  var cartItems = <MenuModel, int>{}.obs;
   var selectedCategory = 'Starters'.obs;
   var isVegFilter = true.obs;
   var isNonVegFilter = false.obs;
@@ -54,7 +54,7 @@ class MenuPageController extends GetxController {
     tableNumber.value = tableNo;
   }
 
-  void addToCart(MenuItem item) {
+  void addToCart(MenuModel item) {
     if (cartItems.containsKey(item)) {
       cartItems[item] = cartItems[item]! + 1;
     } else {
@@ -62,14 +62,14 @@ class MenuPageController extends GetxController {
     }
     cartItems.refresh();
     Get.snackbar(
-      'Added to Cart', 
-      '${item.name} added to cart',
+      'Added to Cart',
+      '${item.itemName} added to cart',
       duration: const Duration(seconds: 1),
       snackPosition: SnackPosition.BOTTOM,
     );
   }
 
-  void removeFromCart(MenuItem item) {
+  void removeFromCart(MenuModel item) {
     if (cartItems.containsKey(item)) {
       if (cartItems[item]! > 1) {
         cartItems[item] = cartItems[item]! - 1;
@@ -80,28 +80,28 @@ class MenuPageController extends GetxController {
     }
   }
 
-  int getItemQuantity(MenuItem item) {
+  int getItemQuantity(MenuModel item) {
     return cartItems[item] ?? 0;
   }
 
   double get totalAmount {
     double total = 0;
     cartItems.forEach((item, quantity) {
-      total += item.price * quantity;
+      total += (double.tryParse(item.restrorate) ?? 0.0) * quantity;
     });
     return total;
   }
 
-  void navigateToMenuItem(MenuItem item) {
+  void navigateToMenuItem(MenuModel item) {
     Get.toNamed(AppRoutes.MENU_DETAIL, arguments: item);
   }
 
-  void addToCartWithCustomization(MenuItem item) async {
+  void addToCartWithCustomization(MenuModel item) async {
     // Navigate to customization screen
     final result = await Get.toNamed(AppRoutes.CUSTOMIZATION, arguments: item);
     
     if (result != null && result is Map<String, dynamic>) {
-      final customizedItem = result['item'] as MenuItem;
+      final customizedItem = result['item'] as MenuModel;
       final quantity = result['quantity'] as int;
       final customizations = result['customizations'] as List<String>;
       
@@ -114,8 +114,8 @@ class MenuPageController extends GetxController {
       cartItems.refresh();
       
       Get.snackbar(
-        'Added to Cart', 
-        '${customizedItem.name} with customizations added to cart',
+        'Added to Cart',
+        '${customizedItem.itemName} with customizations added to cart',
         duration: const Duration(seconds: 1),
         snackPosition: SnackPosition.BOTTOM,
       );

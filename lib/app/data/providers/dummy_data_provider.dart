@@ -42,7 +42,7 @@ class DummyDataProvider {
 
   static Future<List<String>> getCategories() async {
     final items = await getMenuItems();
-    final Set<String> categories = items.map((item) => item.category).toSet();
+    final Set<String> categories = items.map((item) => item.category ?? 'Other').toSet();
     return categories.toList();
   }
 

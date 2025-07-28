@@ -52,9 +52,9 @@ class MenuDetailView extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        item.isVeg ? Icons.circle : Icons.crop_square,
+                        (item.isVeg ?? true) ? Icons.circle : Icons.crop_square,
                         size: 20,
-                        color: item.isVeg ? Colors.green : Colors.red,
+                        color: (item.isVeg ?? true) ? Colors.green : Colors.red,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -141,7 +141,7 @@ class MenuDetailView extends StatelessWidget {
                   const SizedBox(height: 12),
                   
                   Text(
-                    item.description,
+                    item.description ?? 'No description available',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[600],

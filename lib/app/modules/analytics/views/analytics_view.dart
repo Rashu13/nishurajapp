@@ -34,7 +34,7 @@ class AnalyticsView extends GetView<AnalyticsController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Period selector
-            Container(
+            SizedBox(
               height: 40,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,

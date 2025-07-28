@@ -143,7 +143,7 @@ class OrderStatusView extends GetView<OrderStatusController> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                ...orderStatus.items.map((item) => _buildOrderItem(item, orderStatus.id)).toList(),
+                ...orderStatus.items.map((item) => _buildOrderItem(item, orderStatus.id)),
                 
                 const SizedBox(height: 16),
                 

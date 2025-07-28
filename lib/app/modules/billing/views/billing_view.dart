@@ -138,7 +138,7 @@ class BillingView extends GetView<BillingController> {
           const SizedBox(height: 24),
           
           // Bill items
-          ...bill.items.map((item) => _buildBillItem(item)).toList(),
+          ...bill.items.map((item) => _buildBillItem(item)),
           
           const SizedBox(height: 24),
           

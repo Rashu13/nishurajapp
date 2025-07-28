@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../widgets/common_bottom_navigation_bar.dart';
 import '../controllers/table_management_controller.dart';
+import '../../../data/models/table_model.dart';
 
 class TableManagementView extends GetView<TableManagementController> {
   const TableManagementView({super.key});
@@ -25,6 +26,12 @@ class TableManagementView extends GetView<TableManagementController> {
             fontSize: 18,
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: () => controller.refreshTables(),
+            icon: const Icon(Icons.refresh, color: Color(0xFF2D3142)),
+          ),
+        ],
         centerTitle: false,
       ),
       body: Padding(
@@ -46,25 +53,99 @@ class TableManagementView extends GetView<TableManagementController> {
             // Tab bar
             Obx(() => Row(
               children: [
-                _buildTab('Table', 0),
+                _buildTab('All Tables', 0),
                 const SizedBox(width: 16),
-                _buildTab('Diners', 1),
+                _buildTab('Available', 1),
                 const SizedBox(width: 16),
-                _buildTab('Seating time', 2),
+                _buildTab('Occupied', 2),
               ],
             )),
             
             const SizedBox(height: 24),
             
-            // Table list
+            // Tables content
             Expanded(
-              child: Obx(() => ListView.builder(
-                itemCount: controller.tables.length,
-                itemBuilder: (context, index) {
-                  final table = controller.tables[index];
-                  return _buildTableItem(table);
-                },
-              )),
+              child: Obx(() {
+                if (controller.isLoading.value && controller.tables.isEmpty) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFFF6B35),
+                    ),
+                  );
+                }
+                
+                if (controller.hasError.value && controller.tables.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: Color(0xFFFF6B35),
+                          size: 48,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          controller.errorMessage.value,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Color(0xFF6C757D),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () => controller.loadTables(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF6B35),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24, 
+                              vertical: 12,
+                            ),
+                          ),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
+                if (controller.tables.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No tables available',
+                      style: TextStyle(
+                        color: Color(0xFF6C757D),
+                        fontSize: 16,
+                      ),
+                    ),
+                  );
+                }
+                
+                return Column(
+                  children: [
+                    // Table grid
+                    Expanded(
+                      child: GridView.builder(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.5,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        itemCount: controller.tables.length,
+                        itemBuilder: (context, index) {
+                          final table = controller.tables[index];
+                          return _buildTableItem(table);
+                        },
+                      ),
+                    ),
+                    
+                    // Load more button
+                    
+                  ],
+                );
+              }),
             ),
           ],
         ),
@@ -90,106 +171,102 @@ class TableManagementView extends GetView<TableManagementController> {
         child: Text(
           title,
           style: TextStyle(
+            overflow: TextOverflow.ellipsis,
             color: isSelected ? Colors.white : Colors.grey[600],
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            fontSize: 14,
+            fontSize: 12,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTableItem(TableAssignment table) {
-    final isOccupied = table.status == TableStatus.occupied;
+  Widget _buildTableItem(TableModel table) {
+    // status=true means Available (खाली), status=false means Occupied (भरा हुआ)
+    final isOccupied = !table.status;
+    final isSelected = table.isSelected;
     
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () => controller.toggleTableSelection(table),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected 
+                ? const Color(0xFFFF6B35) 
+                : Colors.grey[200]!,
+            width: isSelected ? 2 : 1,
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Table number
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: isOccupied ? const Color(0xFFFF6B35) : Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            child: Center(
-              child: Text(
-                table.tableNumber,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isOccupied ? Colors.white : Colors.grey[600],
-                ),
-              ),
-            ),
-          ),
-          
-          const SizedBox(width: 16),
-          
-          // Table info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${table.waiterName} (${table.guests})',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2D3142),
+                // Table number
+                Flexible(
+                  child: Text(
+                    table.tableName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D3142),
+                    ),
                   ),
                 ),
                 
-                const SizedBox(height: 4),
-                
-                Text(
-                  table.time,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF6C757D),
+                // Selection indicator
+                if (isSelected)
+                  const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFFFF6B35),
+                    size: 20,
                   ),
-                ),
               ],
             ),
-          ),
-          
-          // Status indicator
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: isOccupied 
-                ? const Color(0xFFFF6B35).withOpacity(0.1)
-                : const Color(0xFF28A745).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              isOccupied ? 'Occupied' : 'Available',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+            
+            const Spacer(),
+            
+            // Status indicator
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
                 color: isOccupied 
-                  ? const Color(0xFFFF6B35)
-                  : const Color(0xFF28A745),
+                  ? const Color(0xFFFF6B35).withOpacity(0.1)
+                  : const Color(0xFF28A745).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                isOccupied ? 'Occupied' : 'Available',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isOccupied 
+                    ? const Color(0xFFFF6B35)
+                    : const Color(0xFF28A745),
+                ),
               ),
             ),
-          ),
-        ],
+            
+            const SizedBox(height: 8),
+            
+            // Room type
+            
+          ],
+        ),
       ),
     );
   }

@@ -27,7 +27,7 @@ class OrderStatusRepository {
         id: entry.key,
         tableNumber: first['TableName'] ?? '',
         items: items.map((i) => OrderItem(
-          id: i['ItemID'].toString(),
+          id: i['KOTDID'].toString(), // Use KOTDID instead of ItemID for delete operations
           name: i['ItemName'] ?? '',
           quantity: (i['Qty'] as num?)?.toInt() ?? 1,
           status: i['OrderStatus'] == true ? 'served' : 'in_progress',
@@ -75,6 +75,14 @@ class OrderStatusRepository {
       // await _apiProvider.addDishesToOrder(orderId, items);
     } catch (e) {
       throw Exception('Failed to add dishes to order: $e');
+    }
+  }
+
+  Future<bool> deleteOrderItem(String itemId) async {
+    try {
+      return await OrderStatusApiProvider.deleteKOTItem(itemId);
+    } catch (e) {
+      throw Exception('Failed to delete order item: $e');
     }
   }
 }

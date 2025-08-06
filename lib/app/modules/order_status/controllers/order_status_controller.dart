@@ -112,19 +112,73 @@ class OrderStatusController extends GetxController {
     }
   
 
-  void deleteOrderItem(String orderId, String itemId) {
-    final orderIndex = orderStatuses.indexWhere((order) => order.id == orderId);
-    if (orderIndex != -1) {
-      orderStatuses[orderIndex].items.removeWhere((item) => item.id == itemId);
-      orderStatuses.refresh();
+  Future<void> deleteOrderItem(String orderId, String itemId) async {
+    try {
+      isLoading.value = true;
+      
+      // Call API to delete item
+      final success = await _repository.deleteOrderItem(itemId);
+      
+      if (success) {
+        // Remove item from local state after successful API call
+        final orderIndex = orderStatuses.indexWhere((order) => order.id == orderId);
+        if (orderIndex != -1) {
+          final order = orderStatuses[orderIndex];
+          final updatedItems = order.items.where((item) => item.id != itemId).toList();
+          
+          if (updatedItems.isEmpty) {
+            // Remove entire order if no items left
+            orderStatuses.removeAt(orderIndex);
+          } else {
+            // Update order with remaining items
+            orderStatuses[orderIndex] = OrderStatus(
+              id: order.id,
+              tableNumber: order.tableNumber,
+              items: updatedItems,
+              createdAt: order.createdAt,
+              status: order.status,
+            );
+          }
+        }
+        
+        Get.snackbar(
+          'Success',
+          'Item deleted successfully',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF4CAF50),
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          'Cannot delete item. Order may be billed or item already processed.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      print('🔥 Delete operation failed: $e');
+      
+      String errorMessage;
+      if (e.toString().contains('Backend server error')) {
+        errorMessage = 'Delete feature temporarily unavailable. Please contact support.';
+      } else if (e.toString().contains('500')) {
+        errorMessage = 'Server error occurred. Please try again later.';
+      } else {
+        errorMessage = 'Failed to delete item. Please try again.';
+      }
       
       Get.snackbar(
-        'Success',
-        'Item removed from order',
+        'Error',
+        errorMessage,
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF4CAF50),
+        backgroundColor: Colors.red,
         colorText: Colors.white,
+        duration: Duration(seconds: 5),
       );
+    } finally {
+      isLoading.value = false;
     }
   }
 

@@ -12,6 +12,7 @@ class AppRoutes {
   static const String CUSTOMIZATION = '/customization';
   static const String ORDER_SUMMARY = '/order_summary';
   static const String BILL_GENERATION = '/bill_generation';
+  static const String BILL_DETAIL = '/bill_detail';
   static const String PAYMENT_METHOD = '/payment_method';
   static const String PAYMENT_SUCCESSFUL = '/payment_successful';
   static const String PROFILE = '/profile';

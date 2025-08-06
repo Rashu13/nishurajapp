@@ -20,6 +20,8 @@ import '../modules/order_summary/views/order_summary_view.dart';
 import '../modules/order_summary/bindings/order_summary_binding.dart';
 import '../modules/bill_generation/views/bill_generation_view.dart';
 import '../modules/bill_generation/bindings/bill_generation_binding.dart';
+import '../modules/bill_detail/views/bill_detail_view.dart';
+import '../modules/bill_detail/bindings/bill_detail_binding.dart';
 import '../modules/payment_method/views/payment_method_view.dart';
 import '../modules/payment_method/bindings/payment_method_binding.dart';
 import '../modules/payment_successful/views/payment_successful_view.dart';
@@ -95,6 +97,11 @@ class AppPages {
       name: AppRoutes.BILL_GENERATION,
       page: () => const BillGenerationView(),
       binding: BillGenerationBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.BILL_DETAIL,
+      page: () => const BillDetailView(),
+      binding: BillDetailBinding(),
     ),
     GetPage(
       name: AppRoutes.PAYMENT_METHOD,

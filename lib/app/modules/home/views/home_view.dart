@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:serv/app/global/widgets/loader.dart';
 import '../controllers/home_controller.dart';
 import '../../../routes/app_routes.dart';
 import '../../../widgets/common_bottom_navigation_bar.dart';
@@ -10,6 +12,10 @@ class HomeView extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
+    final box = GetStorage();
+    final user = box.read('user');
+    final email = user != null && user['EmailID'] != null ? user['EmailID'] : '';
+    final name = user != null && user['Name'] != null ? user['Name'] : '';
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -19,17 +25,17 @@ class HomeView extends GetView<HomeController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Break time is: 03:20:15',
+              'Hi, $name',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
                 fontWeight: FontWeight.normal,
               ),
             ),
-            const Text(
-              'Hi, Krishna Sahu',
-              style: TextStyle(
-                fontSize: 18,
+            Text(
+              '$email',
+              style: const TextStyle(
+                fontSize: 13,
                 color: Color(0xFF2D3142),
                 fontWeight: FontWeight.bold,
               ),
@@ -72,20 +78,20 @@ class HomeView extends GetView<HomeController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Status tabs
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildStatusTab('You\'re serving', true),
-                  const SizedBox(width: 12),
-                  _buildStatusTab('Check tables', false),
-                  const SizedBox(width: 12),
-                  _buildStatusTab('Other\'s serving', false),
-                ],
-              ),
-            ),
+            // SingleChildScrollView(
+            //   scrollDirection: Axis.horizontal,
+            //   child: Row(
+            //     children: [
+            //       _buildStatusTab('You\'re serving', true),
+            //       const SizedBox(width: 12),
+            //       _buildStatusTab('Check tables', false),
+            //       const SizedBox(width: 12),
+            //       _buildStatusTab('Other\'s serving', false),
+            //     ],
+            //   ),
+            // ),
             
-            const SizedBox(height: 24),
+            //const SizedBox(height: 24),
             
             // Table grid
             const Text(
@@ -103,9 +109,7 @@ class HomeView extends GetView<HomeController> {
               child: Obx(() {
                 if (controller.isTablesLoading.value) {
                   return const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFFFF6B35),
-                    ),
+                    child: LoaderCircle(),
                   );
                 }
                 
@@ -196,7 +200,7 @@ class HomeView extends GetView<HomeController> {
     return GestureDetector(
       onTap: () {
         if (isOccupied) {
-          controller.navigateToMenu();
+          controller.navigateToMenu(table);
         } else {
           _showTableDialog(tableNumber, table);
         }
@@ -330,7 +334,7 @@ class HomeView extends GetView<HomeController> {
                 child: ElevatedButton(
                   onPressed: () {
                     Get.back();
-                    controller.navigateToMenu();
+                    controller.navigateToMenu(table);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF6B35),

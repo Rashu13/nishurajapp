@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:serv/app/global/widgets/loader.dart';
 import '../controllers/order_controller.dart';
-import '../../../data/models/menu_item.dart';
+import '../../../data/models/menu_model.dart';
 
 class OrderView extends GetView<OrderController> {
   const OrderView({super.key});
@@ -171,7 +172,7 @@ class OrderView extends GetView<OrderController> {
             ),
           ),
           child: controller.isLoading.value
-              ? const CircularProgressIndicator(color: Colors.white)
+              ? const LoaderCircle()
               : Text(
                   'Place Order • ₹${controller.totalAmount.toInt()}',
                   style: const TextStyle(
@@ -185,7 +186,7 @@ class OrderView extends GetView<OrderController> {
     );
   }
 
-  Widget _buildOrderItem(MenuItem item, int quantity) {
+  Widget _buildOrderItem(MenuModel item, int quantity) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -211,7 +212,7 @@ class OrderView extends GetView<OrderController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.name,
+                  item.itemName,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -219,7 +220,7 @@ class OrderView extends GetView<OrderController> {
                   ),
                 ),
                 Text(
-                  '₹${item.price.toInt()}',
+                  '₹${(double.tryParse(item.restrorate) ?? 0.0).toInt()}',
                   style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF6C757D),

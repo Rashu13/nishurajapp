@@ -16,6 +16,7 @@ class HomeController extends GetxController {
   var selectedCategory = 'All'.obs;
   var categories = <String>['All', 'Starter', 'Main Course', 'Dessert', 'Drinks'].obs;
   var guestCount = 4.obs;
+  var selectedTable = Rxn<TableModel>();
 
   @override
   void onInit() {
@@ -80,8 +81,14 @@ class HomeController extends GetxController {
     selectedCategory.value = category;
   }
 
-  void navigateToMenu() {
-    Get.toNamed(AppRoutes.MENU);
+  void navigateToMenu([TableModel? table]) {
+    if (table != null) {
+      selectedTable.value = table;
+      print('HomeController: Navigating to menu with table: ${table.tableName}');
+    } else {
+      print('HomeController: Navigating to menu without table argument');
+    }
+    Get.toNamed(AppRoutes.MENU, arguments: selectedTable.value);
   }
 
   void navigateToMenuItem(MenuModel item) {

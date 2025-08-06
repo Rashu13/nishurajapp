@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:serv/app/global/widgets/loader.dart';
 import '../controllers/menu_controller.dart';
 import '../../../data/models/menu_model.dart';
 
@@ -31,6 +32,35 @@ class MenuView extends GetView<MenuPageController> {
       ),
       body: Column(
         children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: TextField(
+                onChanged: controller.updateSearchQuery,
+                decoration: InputDecoration(
+                  hintText: 'Search menu items...',
+                  hintStyle: TextStyle(color: Colors.grey[600]),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                  suffixIcon: Obx(() => controller.searchQuery.value.isNotEmpty
+                      ? IconButton(
+                          onPressed: controller.clearSearch,
+
+                          icon: Icon(Icons.clear, color: Colors.grey[600]),
+                        )
+                      : const SizedBox.shrink()),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ),
+          ),
+           const Divider(height: 1),
           // Table number selector
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -53,14 +83,14 @@ class MenuView extends GetView<MenuPageController> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        '01',
-                        style: TextStyle(
+                      Obx(() => Text(
+                        controller.tableNumber.value,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF2D3142),
                         ),
-                      ),
+                      )),
                       const SizedBox(width: 8),
                       Icon(
                         Icons.keyboard_arrow_down,
@@ -75,100 +105,132 @@ class MenuView extends GetView<MenuPageController> {
           ),
           
           // Category tabs
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  Obx(() => _buildCategoryTab('Bar', controller.selectedCategory.value == 'Bar')),
-                  const SizedBox(width: 12),
-                  Obx(() => _buildCategoryTab('Starters', controller.selectedCategory.value == 'Starters')),
-                  const SizedBox(width: 12),
-                  Obx(() => _buildCategoryTab('Soup', controller.selectedCategory.value == 'Soup')),
-                  const SizedBox(width: 12),
-                  Obx(() => _buildCategoryTab('Bread', controller.selectedCategory.value == 'Bread')),
-                ],
-              ),
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          //   child: SingleChildScrollView(
+          //     scrollDirection: Axis.horizontal,
+          //     child: Row(
+          //       children: [
+          //         Obx(() => _buildCategoryTab('Bar', controller.selectedCategory.value == 'Bar')),
+          //         const SizedBox(width: 12),
+          //         Obx(() => _buildCategoryTab('Starters', controller.selectedCategory.value == 'Starters')),
+          //         const SizedBox(width: 12),
+          //         Obx(() => _buildCategoryTab('Soup', controller.selectedCategory.value == 'Soup')),
+          //         const SizedBox(width: 12),
+          //         Obx(() => _buildCategoryTab('Bread', controller.selectedCategory.value == 'Bread')),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           
-          // Veg/Non-veg toggles and filter icons
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // // Veg/Non-veg toggles and filter icons
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
               
-              children: [
-                // Veg toggle
-                Row(
-                  children: [
-                    Obx(() => Switch(
-                      value: controller.isVegFilter.value,
-                      onChanged: controller.toggleVegFilter,
-                      activeColor: Colors.green,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    )),
-                    const Text(
-                      'Veg',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6C757D),
-                      ),
-                    ),
-                  ],
-                ),
+          //     children: [
+          //       // Veg toggle
+          //       Row(
+          //         children: [
+          //           Obx(() => Switch(
+          //             value: controller.isVegFilter.value,
+          //             onChanged: controller.toggleVegFilter,
+          //             activeColor: Colors.green,
+          //             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          //           )),
+          //           const Text(
+          //             'Veg',
+          //             style: TextStyle(
+          //               fontSize: 14,
+          //               color: Color(0xFF6C757D),
+          //             ),
+          //           ),
+          //         ],
+          //       ),
                 
-                const SizedBox(width: 24),
+          //       const SizedBox(width: 24),
                 
-                // Non-veg toggle
-                Row(
-                  children: [
-                    Obx(() => Switch(
-                      value: controller.isNonVegFilter.value,
-                      onChanged: controller.toggleNonVegFilter,
-                      activeColor: Colors.red,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    )),
-                    const Text(
-                      'Nonveg',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6C757D),
-                      ),
-                    ),
-                  ],
-                ),
+          //       // Non-veg toggle
+          //       Row(
+          //         children: [
+          //           Obx(() => Switch(
+          //             value: controller.isNonVegFilter.value,
+          //             onChanged: controller.toggleNonVegFilter,
+          //             activeColor: Colors.red,
+          //             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          //           )),
+          //           const Text(
+          //             'Nonveg',
+          //             style: TextStyle(
+          //               fontSize: 14,
+          //               color: Color(0xFF6C757D),
+          //             ),
+          //           ),
+          //         ],
+          //       ),
                 
-                const Spacer(),
+          //       const Spacer(),
                 
-                // Filter icons
+          //       // Filter icons
                 
-              ],
-            ),
-          ),
+          //     ],
+          //   ),
+          // ),
           
-          const Divider(height: 1),
+          
           SizedBox(height: 5,),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildFilterIcon(Icons.set_meal, 'Fish'),
-                    const SizedBox(width: 12),
-                    _buildFilterIcon(Icons.local_dining, 'Chicken'),
-                    const SizedBox(width: 12),
-                    _buildFilterIcon(Icons.restaurant, 'Mutton'),
-                    const SizedBox(width: 12),
-                    _buildFilterIcon(Icons.eco, 'Eggs'),
-                  ],
-                ),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          //         children: [
+          //           _buildFilterIcon(Icons.set_meal, 'Fish'),
+          //           const SizedBox(width: 12),
+          //           _buildFilterIcon(Icons.local_dining, 'Chicken'),
+          //           const SizedBox(width: 12),
+          //           _buildFilterIcon(Icons.restaurant, 'Mutton'),
+          //           const SizedBox(width: 12),
+          //           _buildFilterIcon(Icons.eco, 'Eggs'),
+          //         ],
+          //       ),
           // Menu items list
           SizedBox(height: 5,),
           const Divider(height: 1),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: LoaderCircle());
+              }
+              
+              if (controller.menuItems.isEmpty && controller.searchQuery.value.isNotEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No items found for "${controller.searchQuery.value}"',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: controller.clearSearch,
+                        child: const Text(
+                          'Clear Search',
+                          style: TextStyle(color: Color(0xFFFF6B35)),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               }
               
               return ListView.builder(
@@ -213,7 +275,7 @@ class MenuView extends GetView<MenuPageController> {
                       ),
                     ),
                     Text(
-                      '₹${controller.totalAmount.toInt()}',
+                      '₹${controller.totalAmount.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -304,32 +366,33 @@ class MenuView extends GetView<MenuPageController> {
         children: [
           // Food image
           Container(
-            width: 50,
-            height: 50,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(5),
               image: const DecorationImage(
-                image: NetworkImage('https://via.placeholder.com/80x80'),
+                image: AssetImage('assets/images/foodtray.png'),
                 fit: BoxFit.cover,
               ),
             ),
           ),
           
-          const SizedBox(width: 16),
+          const SizedBox(width: 5),
           
           // Item details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                Obx(() => _buildHighlightedText(
                   item.itemName,
-                  style: const TextStyle(
+                  controller.searchQuery.value,
+                  const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF2D3142),
                   ),
-                ),
+                )),
                 
                 const SizedBox(height: 4),
                 
@@ -371,7 +434,7 @@ class MenuView extends GetView<MenuPageController> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '₹ ${(double.tryParse(item.restrorate) ?? 0.0).toInt()}',
+                      '₹ ${(double.tryParse(item.restrorate) ?? 0.0).toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -404,7 +467,7 @@ class MenuView extends GetView<MenuPageController> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 5),
                             // Add to order button
                             GestureDetector(
                               onTap: () => controller.addToCart(item),
@@ -477,6 +540,44 @@ class MenuView extends GetView<MenuPageController> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHighlightedText(String text, String query, TextStyle style) {
+    if (query.isEmpty) {
+      return Text(text, style: style);
+    }
+
+    final lowerText = text.toLowerCase();
+    final lowerQuery = query.toLowerCase();
+    final index = lowerText.indexOf(lowerQuery);
+
+    if (index == -1) {
+      return Text(text, style: style);
+    }
+
+    return RichText(
+      text: TextSpan(
+        children: [
+          if (index > 0)
+            TextSpan(
+              text: text.substring(0, index),
+              style: style,
+            ),
+          TextSpan(
+            text: text.substring(index, index + query.length),
+            style: style.copyWith(
+              backgroundColor: const Color(0xFFFF6B35).withOpacity(0.3),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (index + query.length < text.length)
+            TextSpan(
+              text: text.substring(index + query.length),
+              style: style,
+            ),
         ],
       ),
     );

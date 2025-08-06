@@ -1,3 +1,4 @@
+import '../modules/auth/views/login_view.dart';
 import 'package:get/get.dart';
 import 'package:serv/app/modules/table_management/views/table_management_view.dart';
 import '../modules/splash/views/splash_view.dart';
@@ -32,6 +33,10 @@ import 'app_routes.dart';
 
 class AppPages {
   static final routes = [
+    GetPage(
+      name: '/login',
+      page: () => LoginView(),
+    ),
     GetPage(
       name: AppRoutes.SPLASH,
       page: () => const SplashView(),

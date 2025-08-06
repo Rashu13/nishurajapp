@@ -1,3 +1,4 @@
+// import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/order_status.dart';
@@ -10,11 +11,14 @@ class OrderStatusController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString searchQuery = ''.obs;
 
+
+
   @override
   void onInit() {
     super.onInit();
     loadOrderStatuses();
   }
+
 
   Future<void> loadOrderStatuses() async {
     try {
@@ -103,10 +107,10 @@ class OrderStatusController extends GetxController {
     }
   }
 
-  Future<void> addDishes(String orderId) async {
-    // Navigate to menu to add more dishes
-    Get.toNamed('/menu', arguments: {'orderId': orderId});
-  }
+  Future<void> addDishes() async {
+    Get.toNamed('/home');
+    }
+  
 
   void deleteOrderItem(String orderId, String itemId) {
     final orderIndex = orderStatuses.indexWhere((order) => order.id == orderId);

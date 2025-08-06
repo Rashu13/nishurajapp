@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:serv/app/global/widgets/loader.dart';
 import '../controllers/splash_controller.dart';
 
 class SplashView extends GetView<SplashController> {
@@ -20,18 +22,12 @@ class SplashView extends GetView<SplashController> {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: const Color(0xFFFF6B35),
+                color: const Color(0xFFFFFFFF),
                 borderRadius: BorderRadius.circular(30),
               ),
-              child: const Center(
-                child: Text(
-                  'Serv',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+              child: SvgPicture.asset(
+                'assets/images/hunger.svg',
+                height: 150,
               ),
             ),
             const SizedBox(height: 30),
@@ -44,9 +40,7 @@ class SplashView extends GetView<SplashController> {
               ),
             ),
             const SizedBox(height: 50),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF6B35)),
-            ),
+            const LoaderCircle(),
           ],
         ),
       ),

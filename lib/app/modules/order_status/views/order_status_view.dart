@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:serv/app/global/widgets/loader.dart';
 import '../controllers/order_status_controller.dart';
 import '../../../data/models/order_status.dart';
 import '../../../widgets/common_bottom_navigation_bar.dart';
@@ -57,7 +58,7 @@ class OrderStatusView extends GetView<OrderStatusController> {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: LoaderCircle());
               }
               
               final filteredStatuses = controller.filteredOrderStatuses;
@@ -150,31 +151,31 @@ class OrderStatusView extends GetView<OrderStatusController> {
                 // Action buttons
                 Row(
                   children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => controller.sendBill(orderStatus.id),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFFFF6B35)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Send Bill',
-                          style: TextStyle(
-                            color: Color(0xFFFF6B35),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
+                    // Expanded(
+                    //   child: OutlinedButton(
+                    //     onPressed: () => controller.sendBill(orderStatus.id),
+                    //     style: OutlinedButton.styleFrom(
+                    //       side: const BorderSide(color: Color(0xFFFF6B35)),
+                    //       padding: const EdgeInsets.symmetric(vertical: 12),
+                    //       shape: RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.circular(8),
+                    //       ),
+                    //     ),
+                    //     child: const Text(
+                    //       'Send Bill',
+                    //       style: TextStyle(
+                    //         color: Color(0xFFFF6B35),
+                    //         fontWeight: FontWeight.w600,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                     
                     const SizedBox(width: 12),
                     
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () => controller.addDishes(orderStatus.id),
+                        onPressed: () => controller.addDishes(),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFF6B35),
                           padding: const EdgeInsets.symmetric(vertical: 12),

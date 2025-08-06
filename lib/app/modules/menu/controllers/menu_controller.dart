@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/menu_model.dart';
+import '../../../data/models/table_model.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../routes/app_routes.dart';
 
@@ -13,13 +14,26 @@ class MenuPageController extends GetxController {
   var selectedCategory = 'Starters'.obs;
   var isVegFilter = true.obs;
   var isNonVegFilter = false.obs;
-  var tableNumber = '01'.obs;
+  var tableNumber = '1'.obs;
+  var selectedTable = Rxn<TableModel>();
+  var searchQuery = ''.obs;
+  var allMenuItems = <MenuModel>[].obs;
 
   final List<String> categories = ['Bar', 'Starters', 'Soup', 'Bread'];
 
   @override
   void onInit() {
     super.onInit();
+    // Get table from arguments if passed
+    final TableModel? table = Get.arguments as TableModel?;
+    print('MenuPageController: Received table argument: $table');
+    if (table != null) {
+      selectedTable.value = table;
+      tableNumber.value = table.tableName;
+      print('MenuPageController: Set table number to: ${table.tableName}');
+    } else {
+      print('MenuPageController: No table argument received, using default table number');
+    }
     loadMenuItems();
   }
 
@@ -27,7 +41,8 @@ class MenuPageController extends GetxController {
     try {
       isLoading.value = true;
       final items = await _menuRepository.getMenuItems();
-      menuItems.value = items;
+      allMenuItems.value = items;
+      filterMenuItems();
     } catch (e) {
       Get.snackbar('Error', 'Failed to load menu items');
     } finally {
@@ -37,17 +52,39 @@ class MenuPageController extends GetxController {
 
   void selectCategory(String category) {
     selectedCategory.value = category;
-    // Here you can filter items based on category if needed
+    filterMenuItems();
+  }
+
+  void filterMenuItems() {
+    var filteredItems = allMenuItems.where((item) {
+      // Search filter
+      bool matchesSearch = searchQuery.value.isEmpty ||
+          item.itemName.toLowerCase().contains(searchQuery.value.toLowerCase());
+      
+      return matchesSearch;
+    }).toList();
+    
+    menuItems.value = filteredItems;
+  }
+
+  void updateSearchQuery(String query) {
+    searchQuery.value = query;
+    filterMenuItems();
+  }
+
+  void clearSearch() {
+    searchQuery.value = '';
+    filterMenuItems();
   }
 
   void toggleVegFilter(bool value) {
     isVegFilter.value = value;
-    // Apply filter logic here
+    filterMenuItems();
   }
 
   void toggleNonVegFilter(bool value) {
     isNonVegFilter.value = value;
-    // Apply filter logic here
+    filterMenuItems();
   }
 
   void changeTable(String tableNo) {
@@ -61,12 +98,12 @@ class MenuPageController extends GetxController {
       cartItems[item] = 1;
     }
     cartItems.refresh();
-    Get.snackbar(
-      'Added to Cart',
-      '${item.itemName} added to cart',
-      duration: const Duration(seconds: 1),
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    // Get.snackbar(
+    //   'Added to Cart',
+    //   '${item.itemName} added to cart',
+    //   duration: const Duration(seconds: 1),
+    //   snackPosition: SnackPosition.BOTTOM,
+    // );
   }
 
   void removeFromCart(MenuModel item) {
@@ -89,7 +126,7 @@ class MenuPageController extends GetxController {
     cartItems.forEach((item, quantity) {
       total += (double.tryParse(item.restrorate) ?? 0.0) * quantity;
     });
-    return total;
+    return double.parse(total.toStringAsFixed(2));
   }
 
   void navigateToMenuItem(MenuModel item) {
@@ -113,12 +150,12 @@ class MenuPageController extends GetxController {
       }
       cartItems.refresh();
       
-      Get.snackbar(
-        'Added to Cart',
-        '${customizedItem.itemName} with customizations added to cart',
-        duration: const Duration(seconds: 1),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      // Get.snackbar(
+      //   'Added to Cart',
+      //   '${customizedItem.itemName} with customizations added to cart',
+      //   duration: const Duration(seconds: 1),
+      //   snackPosition: SnackPosition.BOTTOM,
+      // );
     }
   }
 
@@ -137,6 +174,7 @@ class MenuPageController extends GetxController {
       Get.toNamed(AppRoutes.ORDER_SUMMARY, arguments: {
         'items': orderItems,
         'tableNumber': tableNumber.value,
+        'selectedTable': selectedTable.value,
       });
     }
   }

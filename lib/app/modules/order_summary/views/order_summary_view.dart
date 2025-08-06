@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:serv/app/global/widgets/loader.dart';
 import '../controllers/order_summary_controller.dart';
-import '../../../data/models/menu_item.dart';
+import '../../../data/models/menu_model.dart';
 
 class OrderSummaryView extends GetView<OrderSummaryController> {
   const OrderSummaryView({super.key});
@@ -79,7 +80,7 @@ class OrderSummaryView extends GetView<OrderSummaryController> {
               itemCount: controller.orderItems.length,
               itemBuilder: (context, index) {
                 final orderItem = controller.orderItems[index];
-                final MenuItem menuItem = orderItem['item'] as MenuItem;
+                final MenuModel menuItem = orderItem['item'] as MenuModel;
                 final int quantity = orderItem['quantity'] as int;
                 final List<String> customizations = List<String>.from(orderItem['customizations'] ?? []);
                 
@@ -148,7 +149,7 @@ class OrderSummaryView extends GetView<OrderSummaryController> {
           ],
         ),
         child: ElevatedButton(
-          onPressed: controller.sendToKitchen,
+          onPressed: controller.isLoading.value ? null : controller.sendToKitchen,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFFF6B35),
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -156,20 +157,26 @@ class OrderSummaryView extends GetView<OrderSummaryController> {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: const Text(
-            'Send to Kitchen',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          child: Obx(() => controller.isLoading.value
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: LoaderCircle(),
+                )
+              : const Text(
+                  'Send to Kitchen',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                )),
         ),
       ),
     );
   }
 
-  Widget _buildOrderItemCard(MenuItem item, int quantity, List<String> customizations, int index) {
+  Widget _buildOrderItemCard(MenuModel item, int quantity, List<String> customizations, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -185,7 +192,7 @@ class OrderSummaryView extends GetView<OrderSummaryController> {
             children: [
               Expanded(
                 child: Text(
-                  item.name,
+                  item.itemName,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -253,7 +260,7 @@ class OrderSummaryView extends GetView<OrderSummaryController> {
           const SizedBox(height: 8),
           
           Text(
-            '₹ ${(item.price * quantity).toInt()}',
+            '₹ ${((double.tryParse(item.restrorate) ?? 0.0) * quantity).toStringAsFixed(2)}',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,

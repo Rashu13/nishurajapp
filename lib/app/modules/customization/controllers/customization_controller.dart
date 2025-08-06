@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
-import '../../../data/models/menu_item.dart';
+import '../../../data/models/menu_model.dart';
 
 class CustomizationController extends GetxController {
-  final MenuItem menuItem = Get.arguments as MenuItem;
+  final MenuModel menuItem = Get.arguments as MenuModel;
   
   // Customization options
   var customizations = <String, bool>{

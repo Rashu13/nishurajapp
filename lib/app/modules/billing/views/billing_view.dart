@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:serv/app/global/widgets/loader.dart';
 import '../../../widgets/common_bottom_navigation_bar.dart';
 import '../controllers/billing_controller.dart';
 import '../../../data/models/bill.dart';
@@ -33,7 +34,7 @@ class BillingView extends GetView<BillingController> {
       bottomNavigationBar: CommonBottomNavigationBar(currentIndex: 2),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: LoaderCircle());
         }
         
         if (controller.bill.value == null) {
@@ -186,10 +187,7 @@ class BillingView extends GetView<BillingController> {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
+                      child: LoaderCircle(),
                     )
                   : const Text(
                       'Next',

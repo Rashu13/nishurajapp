@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../data/models/menu_item.dart';
+import '../../../data/models/menu_model.dart';
+import '../../../data/services/bill_service.dart';
+import '../../../data/models/table_model.dart';
 
 class OrderSummaryController extends GetxController {
+  final BillService _billService = BillService();
+  
   var tableNumber = '01'.obs;
   var orderItems = <Map<String, dynamic>>[].obs;
   var remarkText = ''.obs;
+  var isLoading = false.obs;
+  var selectedTable = Rxn<TableModel>();
   
   @override
   void onInit() {
@@ -15,15 +21,17 @@ class OrderSummaryController extends GetxController {
     if (args != null && args is Map<String, dynamic>) {
       orderItems.value = List<Map<String, dynamic>>.from(args['items'] ?? []);
       tableNumber.value = args['tableNumber'] ?? '01';
+      selectedTable.value = args['selectedTable'] as TableModel?;
     }
   }
   
   double get totalAmount {
-    return orderItems.fold(0.0, (sum, item) {
-      final MenuItem menuItem = item['item'] as MenuItem;
+    final total = orderItems.fold(0.0, (sum, item) {
+      final MenuModel menuItem = item['item'] as MenuModel;
       final int quantity = item['quantity'] as int;
-      return sum + (menuItem.price * quantity);
+      return sum + ((double.tryParse(menuItem.restrorate) ?? 0.0) * quantity);
     });
+    return double.parse(total.toStringAsFixed(2));
   }
   
   void updateTableNumber(String number) {
@@ -47,13 +55,61 @@ class OrderSummaryController extends GetxController {
     }
   }
   
-  void sendToKitchen() {
+  void sendToKitchen() async {
     if (orderItems.isEmpty) {
       Get.snackbar('Error', 'No items in order');
       return;
     }
     
-    // Show order sent confirmation dialog
+    try {
+      isLoading.value = true;
+      
+      // Get table ID from selected table or parse from table number
+      int tableId = selectedTable.value?.tableId ?? 1;
+      
+      print('Sending order to kitchen for Table ID: $tableId');
+      print('Number of items: ${orderItems.length}');
+      print('Remarks: ${remarkText.value}');
+      
+      // Send bill to kitchen via API
+      final result = await _billService.sendBillToKitchen(
+        tableId: tableId,
+        orderItems: orderItems.toList(),
+        remarks: remarkText.value,
+      );
+      
+      isLoading.value = false;
+      
+      print('Kitchen order result: $result');
+      
+      // Show success dialog with API response data
+      _showSuccessDialog(
+        kotNumber: result['kotNumber'],
+        billNumber: result['billNumber'],
+        totalAmount: result['totalAmount'],
+      );
+      
+    } catch (e) {
+      isLoading.value = false;
+      print('Error sending to kitchen: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to send order to kitchen: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 5),
+      );
+    }
+  }
+  
+  void _showSuccessDialog({
+    required int kotNumber,
+    required double totalAmount,
+    int? billNumber,
+  }) {
+    final currentTime = DateTime.now();
+    final timeString = "${currentTime.hour}:${currentTime.minute.toString().padLeft(2, '0')} ${currentTime.hour >= 12 ? 'PM' : 'AM'}";
+    
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -80,7 +136,7 @@ class OrderSummaryController extends GetxController {
               const SizedBox(height: 16),
               
               const Text(
-                'Order Send to Kitchen',
+                'Order Sent to Kitchen',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -90,11 +146,31 @@ class OrderSummaryController extends GetxController {
               
               const SizedBox(height: 8),
               
-              const Text(
-                'Order has been sent at 1:45 pm',
-                style: TextStyle(
+              Text(
+                'KOT#$kotNumber sent at $timeString',
+                style: const TextStyle(
                   fontSize: 14,
                   color: Color(0xFF6C757D),
+                ),
+              ),
+              
+              if (billNumber != null) 
+                Text(
+                  'Bill#$billNumber',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF6C757D),
+                  ),
+                ),
+              
+              const SizedBox(height: 8),
+              
+              Text(
+                'Total Amount: ₹${totalAmount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2D3142),
                 ),
               ),
               
@@ -105,7 +181,8 @@ class OrderSummaryController extends GetxController {
                 child: ElevatedButton(
                   onPressed: () {
                     Get.back(); // Close dialog
-                    Get.back(); // Go back to previous screen
+                    Get.back(); // Go back to menu
+                    Get.back(); // Go back to home
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF6B35),

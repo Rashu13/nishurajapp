@@ -28,9 +28,9 @@ class ItemsApiProvider {
       
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = response.data;
-        final List<dynamic> tablesData = data['Tables'] ?? [];
+        final List<dynamic> itemsData = data['Items'] ?? [];
         
-        return tablesData.map((item) => MenuModel.fromJson(item)).toList();
+        return itemsData.map((item) => MenuModel.fromJson(item)).toList();
       }
       
       return _getDummyItems();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:serv/app/global/widgets/loader.dart';
 import '../../../widgets/common_bottom_navigation_bar.dart';
 import '../controllers/table_management_controller.dart';
 import '../../../data/models/table_model.dart';
@@ -68,9 +69,7 @@ class TableManagementView extends GetView<TableManagementController> {
               child: Obx(() {
                 if (controller.isLoading.value && controller.tables.isEmpty) {
                   return const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFFFF6B35),
-                    ),
+                    child: LoaderCircle()
                   );
                 }
                 

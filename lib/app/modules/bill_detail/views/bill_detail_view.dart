@@ -43,24 +43,67 @@ class BillDetailView extends GetView<BillDetailController> {
               
               const SizedBox(height: 20),
               
-              // Items List Header
-              const Text(
-                'Order Items',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3142),
+              // Show different content based on bill status
+              if (controller.isBillCompleted) ...[
+                // For completed bills - show completion message and summary only
+                _buildCompletedBillInfo(),
+              ] else ...[
+                // For active bills - show items list with edit options
+                const Text(
+                  'Order Items',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D3142),
+                  ),
                 ),
-              ),
-              
-              const SizedBox(height: 12),
-              
-              // Items List
-              ...controller.billItems.map((item) => _buildItemCard(item)).toList(),
+                
+                const SizedBox(height: 12),
+                
+                // Items List (only for active bills)
+                ...controller.billItems.map((item) => _buildItemCard(item)).toList(),
+                
+                // Show empty state if no items
+                if (controller.billItems.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[200]!),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No items found',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Add items to this order',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
               
               const SizedBox(height: 20),
               
-              // Total Summary
+              // Total Summary (always show)
               _buildTotalSummary(),
               
               const SizedBox(height: 20),
@@ -71,6 +114,91 @@ class BillDetailView extends GetView<BillDetailController> {
           ),
         );
       }),
+    );
+  }
+
+  Widget _buildCompletedBillInfo() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF4CAF50).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Bill Completed',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF4CAF50),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'This bill has been generated and completed.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 20,
+                  color: Colors.grey[600],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'You can print the bill or proceed to payment for this completed order.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -229,7 +357,7 @@ class BillDetailView extends GetView<BillDetailController> {
                 style: TextStyle(fontSize: 14, color: Color(0xFF2D3142)),
               ),
               Text(
-                '₹${controller.bill.itemsTotal.toStringAsFixed(2)}',
+                '₹${controller.calculatedSubtotal.toStringAsFixed(2)}',
                 style: const TextStyle(fontSize: 14, color: Color(0xFF2D3142)),
               ),
             ],
@@ -239,11 +367,11 @@ class BillDetailView extends GetView<BillDetailController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'GST:',
+                'GST (5%):',
                 style: TextStyle(fontSize: 14, color: Color(0xFF2D3142)),
               ),
               Text(
-                '₹${controller.bill.gst.toStringAsFixed(2)}',
+                '₹${controller.calculatedGst.toStringAsFixed(2)}',
                 style: const TextStyle(fontSize: 14, color: Color(0xFF2D3142)),
               ),
             ],
@@ -261,7 +389,7 @@ class BillDetailView extends GetView<BillDetailController> {
                 ),
               ),
               Text(
-                '₹${controller.bill.total.toStringAsFixed(2)}',
+                '₹${controller.calculatedTotal.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -300,7 +428,9 @@ class BillDetailView extends GetView<BillDetailController> {
         const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
-            onPressed: () => controller.proceedToPayment(),
+            onPressed: controller.isBillCompleted 
+              ? () => controller.proceedToPayment() 
+              : () => _showAddItemsOption(),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF6B35),
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -308,9 +438,9 @@ class BillDetailView extends GetView<BillDetailController> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
-              'Proceed to Payment',
-              style: TextStyle(
+            child: Text(
+              controller.isBillCompleted ? 'Proceed to Payment' : 'Add Items',
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
@@ -318,6 +448,34 @@ class BillDetailView extends GetView<BillDetailController> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showAddItemsOption() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Add Items'),
+        content: const Text('Would you like to add more items to this order?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              Get.toNamed('/home'); // Navigate to menu to add items
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF6B35),
+            ),
+            child: const Text(
+              'Add Items',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

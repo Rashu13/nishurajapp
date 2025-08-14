@@ -28,6 +28,15 @@ class BillGenerationView extends GetView<BillGenerationController> {
           ),
         ),
         centerTitle: false,
+        actions: [
+          IconButton(
+            onPressed: () => controller.loadBills(),
+            icon: const Icon(
+              Icons.refresh,
+              color: Color(0xFFFF6B35),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: CommonBottomNavigationBar(currentIndex: 2),
       body: Column(
@@ -59,13 +68,16 @@ class BillGenerationView extends GetView<BillGenerationController> {
                 return const Center(child: LoaderCircle());
               }
               
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: controller.filteredBills.length,
-                itemBuilder: (context, index) {
-                  final bill = controller.filteredBills[index];
-                  return _buildBillCard(bill);
-                },
+              return RefreshIndicator(
+                onRefresh: () => controller.loadBills(),
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: controller.filteredBills.length,
+                  itemBuilder: (context, index) {
+                    final bill = controller.filteredBills[index];
+                    return _buildBillCard(bill);
+                  },
+                ),
               );
             }),
           ),
@@ -75,6 +87,9 @@ class BillGenerationView extends GetView<BillGenerationController> {
   }
 
   Widget _buildBillCard(Bill bill) {
+    // Debug: Print bill status to console
+    print('🏷️ Building card for Table ${bill.tableNumber}: status="${bill.status}"');
+    
     return GestureDetector(
       onTap: () => controller.selectBill(bill),
       child: Container(
@@ -102,20 +117,49 @@ class BillGenerationView extends GetView<BillGenerationController> {
                           color: Color(0xFF2D3142),
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${bill.personCount} Items',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF4CAF50),
-                            fontWeight: FontWeight.w600,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: bill.status.toLowerCase() == 'billed' 
+                                ? const Color(0xFF4CAF50).withOpacity(0.1)
+                                : bill.status.toLowerCase() == 'running'
+                                ? const Color(0xFF2196F3).withOpacity(0.1)
+                                : const Color(0xFFFF9800).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              bill.status.toLowerCase() == 'billed' ? 'Bill Generated' : 
+                              bill.status.toLowerCase() == 'running' ? 'Running' : 'Pending',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: bill.status.toLowerCase() == 'billed' 
+                                  ? const Color(0xFF4CAF50)
+                                  : bill.status.toLowerCase() == 'running'
+                                  ? const Color(0xFF2196F3)
+                                  : const Color(0xFFFF9800),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2196F3).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${bill.personCount} Items',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF2196F3),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -123,7 +167,7 @@ class BillGenerationView extends GetView<BillGenerationController> {
                   Row(
                     children: [
                       Text(
-                        'Server: ${bill.serverId}',
+                        'Steward: ${bill.serverId}',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -135,6 +179,31 @@ class BillGenerationView extends GetView<BillGenerationController> {
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
+                        ),
+                      ),
+                      const Spacer(),
+                      Icon(
+                        bill.status.toLowerCase() == 'billed' ? Icons.check_circle : 
+                        bill.status.toLowerCase() == 'running' ? Icons.pending : Icons.schedule,
+                        size: 16,
+                        color: bill.status.toLowerCase() == 'billed' 
+                          ? const Color(0xFF4CAF50)
+                          : bill.status.toLowerCase() == 'running'
+                          ? const Color(0xFF2196F3)
+                          : const Color(0xFFFF9800),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        bill.status.toLowerCase() == 'billed' ? 'Completed' : 
+                        bill.status.toLowerCase() == 'running' ? 'Active' : 'In Progress',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: bill.status.toLowerCase() == 'billed' 
+                            ? const Color(0xFF4CAF50)
+                            : bill.status.toLowerCase() == 'running'
+                            ? const Color(0xFF2196F3)
+                            : const Color(0xFFFF9800),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],

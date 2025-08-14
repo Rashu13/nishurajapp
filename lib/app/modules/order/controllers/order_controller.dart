@@ -3,6 +3,8 @@ import '../../../data/models/menu_model.dart';
 import '../../../data/models/order.dart';
 import '../../../data/repositories/order_repository.dart';
 import '../../../routes/app_routes.dart';
+import '../../../core/controllers/global_data_controller.dart';
+import '../../../core/utils/toast_helper.dart';
 
 class OrderController extends GetxController {
   final OrderRepository _orderRepository = OrderRepository();
@@ -44,7 +46,7 @@ class OrderController extends GetxController {
 
   void placeOrder() async {
     if (customerName.value.isEmpty || customerPhone.value.isEmpty) {
-      Get.snackbar('Error', 'Please fill in customer details');
+      ToastHelper.showError('Please fill in customer details');
       return;
     }
 
@@ -73,10 +75,17 @@ class OrderController extends GetxController {
 
       await _orderRepository.createOrder(order);
       
+      // Notify global controller about new order (affects table status)
+      try {
+        GlobalDataController.instance.notifyAllUpdates();
+      } catch (e) {
+        print('Global controller not found, skipping notification');
+      }
+      
       Get.offNamed(AppRoutes.ORDER_TRACK, arguments: order);
-      Get.snackbar('Success', 'Order placed successfully!');
+      ToastHelper.showSuccess('Order placed successfully!');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to place order');
+      ToastHelper.showError('Failed to place order');
     } finally {
       isLoading.value = false;
     }

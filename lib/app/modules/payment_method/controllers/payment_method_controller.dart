@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/bill.dart';
+import '../../../core/utils/toast_helper.dart';
 
 class PaymentMethodController extends GetxController {
   late Bill selectedBill;
@@ -41,7 +42,7 @@ class PaymentMethodController extends GetxController {
 
   void sendBillToCounter() {
     if (selectedPaymentMethod.value.isEmpty) {
-      Get.snackbar('Error', 'Please select a payment method');
+      ToastHelper.showError('Please select a payment method');
       return;
     }
 

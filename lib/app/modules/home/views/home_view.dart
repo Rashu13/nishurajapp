@@ -43,6 +43,14 @@ class HomeView extends GetView<HomeController> {
           ],
         ),
         actions: [
+          // Refresh tables button
+          IconButton(
+            onPressed: () => controller.refreshTables(),
+            icon: const Icon(
+              Icons.refresh,
+              color: Color(0xFFFF6B35),
+            ),
+          ),
           // Analytics/Dashboard button
           IconButton(
             onPressed: () => Get.toNamed(AppRoutes.ANALYTICS),
@@ -106,61 +114,66 @@ class HomeView extends GetView<HomeController> {
             const SizedBox(height: 16),
             
             Expanded(
-              child: Obx(() {
-                if (controller.isTablesLoading.value) {
-                  return const Center(
-                    child: LoaderCircle(),
-                  );
-                }
-                
-                if (controller.tables.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No tables available',
-                      style: TextStyle(
-                        color: Color(0xFF6C757D),
-                        fontSize: 16,
-                      ),
-                    ),
-                  );
-                }
-                
-                // Display all available tables for home view
-                final displayTables = controller.tables;
-                
-                return Column(
-                  children: [
-                    // Show table count info
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  await controller.refreshTables();
+                },
+                child: Obx(() {
+                  if (controller.isTablesLoading.value) {
+                    return const Center(
+                      child: LoaderCircle(),
+                    );
+                  }
+                  
+                  if (controller.tables.isEmpty) {
+                    return const Center(
                       child: Text(
-                        'Total Tables: ${displayTables.length}',
-                        style: const TextStyle(
-                          fontSize: 14,
+                        'No tables available',
+                        style: TextStyle(
                           color: Color(0xFF6C757D),
+                          fontSize: 16,
                         ),
                       ),
-                    ),
-                    
-                    Expanded(
-                      child: GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          childAspectRatio: 1,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
+                    );
+                  }
+                  
+                  // Display all available tables for home view
+                  final displayTables = controller.tables;
+                  
+                  return Column(
+                    children: [
+                      // Show table count info
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          'Total Tables: ${displayTables.length}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF6C757D),
+                          ),
                         ),
-                        itemCount: displayTables.length,
-                        itemBuilder: (context, index) {
-                          final table = displayTables[index];
-                          // Show table name instead of numbers, and use actual status
-                          return _buildTableCard(table.tableName, !table.status, table);
-                        },
                       ),
-                    ),
-                  ],
-                );
-              }),
+                      
+                      Expanded(
+                        child: GridView.builder(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 1,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                          itemCount: displayTables.length,
+                          itemBuilder: (context, index) {
+                            final table = displayTables[index];
+                            // Show table name instead of numbers, and use actual status
+                            return _buildTableCard(table.tableName, !table.status, table);
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ),
             ),
             
             const SizedBox(height: 16),
@@ -172,26 +185,6 @@ class HomeView extends GetView<HomeController> {
       ),
       bottomNavigationBar: const CommonBottomNavigationBar(
         currentIndex: 0, // Home tab
-      ),
-    );
-  }
-
-  Widget _buildStatusTab(String title, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFFFF6B35) : Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        border: isActive ? null : Border.all(color: Colors.grey[300]!),
-      ),
-      child: Text(
-        title,
-        style: TextStyle(
-          overflow: TextOverflow.ellipsis,
-          color: isActive ? Colors.white : Colors.grey[600],
-          fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-          fontSize: 12,
-        ),
       ),
     );
   }

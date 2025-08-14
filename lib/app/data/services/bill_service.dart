@@ -273,7 +273,7 @@ class BillService {
           "TaxAmt": double.parse(itemTaxAmt.toStringAsFixed(2)),
           "NetAmt": double.parse(itemNetAmt.toStringAsFixed(2)),
           "Remarks": customizations.isEmpty ? "" : customizations.join(', '),
-          "UserID": GetStorage().read('userId') ?? 1, // Use user ID from storage
+          "UserID": GetStorage().read('userId') ?? 0, // Use user ID from storage
           "SessionID": 1, // Set to 1 instead of null - CONSISTENT
           "Status": false,
           "OrderStatus": false

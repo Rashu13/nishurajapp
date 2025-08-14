@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../data/models/menu_model.dart';
 import '../../../data/services/bill_service.dart';
 import '../../../data/models/table_model.dart';
+import '../../../core/utils/toast_helper.dart';
 
 class OrderSummaryController extends GetxController {
   final BillService _billService = BillService();
@@ -57,7 +58,7 @@ class OrderSummaryController extends GetxController {
   
   void sendToKitchen() async {
     if (orderItems.isEmpty) {
-      Get.snackbar('Error', 'No items in order');
+      ToastHelper.showError('No items in order');
       return;
     }
     
@@ -92,13 +93,7 @@ class OrderSummaryController extends GetxController {
     } catch (e) {
       isLoading.value = false;
       print('Error sending to kitchen: $e');
-      Get.snackbar(
-        'Error',
-        'Failed to send order to kitchen: ${e.toString()}',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
-      );
+      ToastHelper.showError('Failed to send order to kitchen: ${e.toString()}');
     }
   }
   

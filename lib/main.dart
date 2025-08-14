@@ -4,10 +4,15 @@ import 'package:get_storage/get_storage.dart';
 import 'app/routes/app_routes.dart';
 import 'app/routes/app_pages.dart';
 import 'app/core/theme/app_theme.dart';
+import 'app/core/controllers/global_data_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
+  
+  // Initialize global data controller
+  Get.put(GlobalDataController(), permanent: true);
+  
   runApp(const MainApp());
 }
 

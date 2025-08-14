@@ -66,7 +66,7 @@ class OrderStatusView extends GetView<OrderStatusController> {
               if (filteredStatuses.isEmpty) {
                 return const Center(
                   child: Text(
-                    'No orders found',
+                    'No running orders found',
                     style: TextStyle(
                       fontSize: 16,
                       color: Color(0xFF6C757D),
@@ -205,6 +205,12 @@ class OrderStatusView extends GetView<OrderStatusController> {
   Widget _buildOrderItem(OrderItem item, String orderId) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -241,12 +247,20 @@ class OrderStatusView extends GetView<OrderStatusController> {
                     ),
                     
                     if (item.isModified) ...[
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Modified',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF6C757D),
+                      const SizedBox(width: 5),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'Modified',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.orange,
+                          ),
                         ),
                       ),
                     ],
@@ -256,14 +270,79 @@ class OrderStatusView extends GetView<OrderStatusController> {
             ),
           ),
           
-          // Delete button
-          IconButton(
-            onPressed: () => _showDeleteConfirmation(orderId, item.id, item.name),
-            icon: const Icon(
-              Icons.delete_outline,
-              color: Color(0xFF6C757D),
-              size: 20,
-            ),
+          // Quantity controls
+          Row(
+            children: [
+              // Decrease quantity button
+              GestureDetector(
+                onTap: () => controller.decrementQuantity(orderId, item.id),
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Icon(
+                    Icons.remove,
+                    size: 18,
+                    color: Color(0xFF6C757D),
+                  ),
+                ),
+              ),
+              
+              // Quantity display
+              Container(
+                width: 40,
+                alignment: Alignment.center,
+                child: Text(
+                  '${item.quantity}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D3142),
+                  ),
+                ),
+              ),
+              
+              // Increase quantity button
+              GestureDetector(
+                onTap: () => controller.incrementQuantity(orderId, item.id),
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF6B35),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(width: 8),
+              
+              // Delete button
+              GestureDetector(
+                onTap: () => _showDeleteConfirmation(orderId, item.id, item.name),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline,
+                    size: 18,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -274,7 +353,7 @@ class OrderStatusView extends GetView<OrderStatusController> {
     Get.dialog(
       AlertDialog(
         title: const Text('Delete Item'),
-        content: Text('Are you sure you want to delete $itemName from the order?'),
+        content: Text('Are you sure you want to completely remove "$itemName" from the order?\n\nTip: You can also decrease quantity using the minus (-) button.'),
         actions: [
           TextButton(
             onPressed: () => Get.back(),

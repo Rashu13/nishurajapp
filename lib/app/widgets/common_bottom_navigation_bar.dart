@@ -42,31 +42,24 @@ class CommonBottomNavigationBar extends StatelessWidget {
         ),
       ],
       onTap: (index) {
+        // Prevent navigation if already on the same page
+        if (index == currentIndex) return;
+        
         switch (index) {
           case 0:
-            if (Get.currentRoute != AppRoutes.HOME) {
-              Get.offAllNamed(AppRoutes.HOME);
-            }
+            Get.offAllNamed(AppRoutes.HOME);
             break;
           case 1:
-            if (Get.currentRoute != AppRoutes.TABLE_MANAGEMENT) {
-              Get.toNamed(AppRoutes.TABLE_MANAGEMENT);
-            }
+            Get.offAndToNamed(AppRoutes.TABLE_MANAGEMENT);
             break;
           case 2:
-            if (Get.currentRoute != AppRoutes.BILL_GENERATION) {
-              Get.toNamed(AppRoutes.BILL_GENERATION);
-            }
+            Get.offAndToNamed(AppRoutes.BILL_GENERATION);
             break;
           case 3:
-            if (Get.currentRoute != AppRoutes.ORDER_STATUS) {
-              Get.toNamed(AppRoutes.ORDER_STATUS);
-            }
+            Get.offAndToNamed(AppRoutes.ORDER_STATUS);
             break;
           case 4:
-            if (Get.currentRoute != AppRoutes.PROFILE) {
-              Get.toNamed(AppRoutes.PROFILE);
-            }
+            Get.offAndToNamed(AppRoutes.PROFILE);
             break;
         }
       },

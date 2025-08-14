@@ -26,18 +26,18 @@ class BillApiProvider {
 
   static Future<List<dynamic>> fetchTableBillItems(String tableName) async {
     final dio = Dio();
-    final url = 'http://192.168.1.6:44351/api/kot/active-table-items';
     
     try {
       print('🔥 Fetching table bill items for: $tableName');
-      print('🔥 API URL: $url');
       
-      final response = await dio.get(url);
+      // Only use the existing active items endpoint
+      final activeUrl = 'http://192.168.1.6:44351/api/kot/active-table-items';
+      print('🔥 API URL: $activeUrl');
       
+      final response = await dio.get(activeUrl);
       print('🔥 Response status: ${response.statusCode}');
       
       if (response.statusCode == 200 && response.data is List) {
-        // Filter items for specific table
         final allItems = response.data as List;
         final tableItems = allItems.where((item) {
           return item['TableName'] == tableName;
@@ -46,7 +46,9 @@ class BillApiProvider {
         print('🔥 Found ${tableItems.length} items for table $tableName');
         return tableItems;
       }
+      
       throw Exception('Failed to fetch table bill items');
+      
     } catch (e) {
       print('❌ Bill items API exception: $e');
       throw Exception('Failed to fetch table bill items: $e');

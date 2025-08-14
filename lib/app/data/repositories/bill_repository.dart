@@ -25,7 +25,7 @@ class BillRepository {
         gst: (map['GST'] as num?)?.toDouble() ?? 0.0,
         total: (map['GrandTotal'] as num?)?.toDouble() ?? 0.0,
         createdAt: DateTime.now(),
-        status: 'pending',
+        status: map['KOTStatus'] ?? 'pending',
       );
     }).toList();
   }

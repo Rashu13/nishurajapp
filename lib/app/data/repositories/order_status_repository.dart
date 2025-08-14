@@ -13,13 +13,22 @@ class OrderStatusRepository {
   }
 
   List<OrderStatus> _parseOrderStatusList(List<dynamic> data) {
+    // Filter out billed items first
+    final activeBillingData = data.where((item) {
+      final map = Map<String, dynamic>.from(item);
+      // Filter out items that are already billed
+      final kotStatus = map['KOTStatus'] ?? '';
+      return kotStatus != 'Billed';
+    }).toList();
+    
     // Group items by TableID+OrderNo to create OrderStatus objects
     final Map<String, List<Map<String, dynamic>>> grouped = {};
-    for (final item in data) {
+    for (final item in activeBillingData) {
       final map = Map<String, dynamic>.from(item);
       final key = '${map['TableID']}_${map['OrderNo']}';
       grouped.putIfAbsent(key, () => []).add(map);
     }
+    
     return grouped.entries.map((entry) {
       final items = entry.value;
       final first = items.first;
@@ -83,6 +92,14 @@ class OrderStatusRepository {
       return await OrderStatusApiProvider.deleteKOTItem(itemId);
     } catch (e) {
       throw Exception('Failed to delete order item: $e');
+    }
+  }
+
+  Future<bool> updateItemQuantity(String itemId, int newQuantity) async {
+    try {
+      return await OrderStatusApiProvider.updateKOTItemQuantity(itemId, newQuantity.toDouble());
+    } catch (e) {
+      throw Exception('Failed to update item quantity: $e');
     }
   }
 }

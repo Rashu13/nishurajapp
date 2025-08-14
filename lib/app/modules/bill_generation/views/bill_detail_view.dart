@@ -276,46 +276,94 @@ class BillDetailView extends GetView<BillDetailController> {
   }
 
   Widget _buildActionButtons() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () => controller.printBill(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2D3142),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        // Print Options Row
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => controller.testPrint(),
+                icon: const Icon(Icons.print_outlined, size: 18),
+                label: const Text('Test Print'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF6C757D),
+                  side: const BorderSide(color: Color(0xFF6C757D)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
               ),
             ),
-            child: const Text(
-              'Print Bill',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => controller.checkPrinterStatus(),
+                icon: const Icon(Icons.wifi_outlined, size: 18),
+                label: const Text('Check Printer'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF6C757D),
+                  side: const BorderSide(color: Color(0xFF6C757D)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () => controller.proceedToPayment(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF6B35),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        
+        const SizedBox(height: 16),
+        
+        // Main Action Buttons
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => controller.printBill(),
+                icon: const Icon(Icons.print, color: Colors.white, size: 20),
+                label: const Text(
+                  'Print Bill',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2D3142),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
             ),
-            child: const Text(
-              'Proceed to Payment',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+            // const SizedBox(width: 16),
+            // Expanded(
+            //   child: ElevatedButton.icon(
+            //     onPressed: () => controller.proceedToPayment(),
+            //     icon: const Icon(Icons.payment, color: Colors.white, size: 20),
+            //     label: const Text(
+            //       'Proceed to Payment',
+            //       style: TextStyle(
+            //         color: Colors.white,
+            //         fontWeight: FontWeight.bold,
+            //         fontSize: 16,
+            //       ),
+            //     ),
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: const Color(0xFFFF6B35),
+            //       padding: const EdgeInsets.symmetric(vertical: 16),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(12),
+            //       ),
+            //     ),
+            //   ),
+            // ),
+          ],
         ),
       ],
     );

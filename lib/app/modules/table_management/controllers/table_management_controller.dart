@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import '../../../data/models/table_model.dart';
 import '../../../data/repositories/table_repository.dart';
+import '../../../core/controllers/global_data_controller.dart';
+import '../../../core/utils/toast_helper.dart';
 
 class TableManagementController extends GetxController {
   final TableRepository _tableRepository = Get.find<TableRepository>();
@@ -20,6 +22,16 @@ class TableManagementController extends GetxController {
   void onInit() {
     super.onInit();
     loadTables();
+    
+    // Listen for global table data updates
+    try {
+      ever(GlobalDataController.instance.tableDataUpdated, (_) {
+        print('🔄 Table Management: Received table data update notification');
+        loadTables();
+      });
+    } catch (e) {
+      print('Global controller not found, continuing without listener');
+    }
   }
   
   // Load initial tables
@@ -70,12 +82,8 @@ class TableManagementController extends GetxController {
       tables.value = _tableRepository.tables;
     } catch (e) {
       print('Error loading more tables: ${e.toString()}');
-      // Show a snackbar but don't set hasError since we still show existing tables
-      Get.snackbar(
-        'Error', 
-        'Failed to load more tables',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      // Show a toast but don't set hasError since we still show existing tables
+      ToastHelper.showError('Failed to load more tables');
     } finally {
       isLoadingMore.value = false;
     }
@@ -99,24 +107,12 @@ class TableManagementController extends GetxController {
     try {
       final success = await _tableRepository.updateTableStatus(table.tableId, newStatus);
       if (success) {
-        Get.snackbar(
-          'Success', 
-          'Table ${table.tableName} status updated',
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        ToastHelper.showSuccess('Table ${table.tableName} status updated');
       } else {
-        Get.snackbar(
-          'Error', 
-          'Failed to update table status',
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        ToastHelper.showError('Failed to update table status');
       }
     } catch (e) {
-      Get.snackbar(
-        'Error', 
-        'An error occurred: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ToastHelper.showError('An error occurred: ${e.toString()}');
     }
   }
   

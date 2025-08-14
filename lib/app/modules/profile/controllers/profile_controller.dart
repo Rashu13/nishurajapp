@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../core/utils/toast_helper.dart';
 
 class ProfileController extends GetxController {
   var userName = 'Krishna Sahu'.obs;
@@ -43,12 +44,12 @@ class ProfileController extends GetxController {
   
   void editProfile() {
     // Handle profile editing
-    Get.snackbar('Profile', 'Edit profile functionality');
+    ToastHelper.showInfo('Edit profile functionality');
   }
   
   void changePassword() {
     // Handle password change
-    Get.snackbar('Password', 'Change password functionality');
+    ToastHelper.showInfo('Change password functionality');
   }
 
   void editPersonalInfo() {}

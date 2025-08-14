@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import '../../../data/models/bill.dart';
 import '../../../data/repositories/bill_repository.dart';
+import '../../../core/controllers/global_data_controller.dart';
+import '../../../core/utils/toast_helper.dart';
 
 class BillGenerationController extends GetxController {
   final BillRepository _repository = BillRepository();
@@ -13,19 +15,41 @@ class BillGenerationController extends GetxController {
   void onInit() {
     super.onInit();
     loadBills();
+    
+    // Listen for global data updates
+    try {
+      ever(GlobalDataController.instance.billDataUpdated, (_) {
+        print('🔄 Bill Controller: Received data update notification');
+        loadBills();
+      });
+    } catch (e) {
+      print('Global controller not found, continuing without listener');
+    }
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    // Refresh bills when view becomes ready/visible again
+    loadBills();
   }
 
   Future<void> loadBills() async {
     try {
       isLoading.value = true;
+      print('🔄 Loading bills...');
       final bills = await _repository.getTableBills();
       billsList.assignAll(bills);
+      print('✅ Bills loaded: ${bills.length} bills');
+      
+      // Debug each bill's status
+      for (var bill in bills) {
+        print('📋 Bill ${bill.tableNumber}: status="${bill.status}", orderId=${bill.orderId}');
+      }
+      
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load bills: $e',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      print('❌ Failed to load bills: $e');
+      ToastHelper.showError('Failed to load bills: $e');
     } finally {
       isLoading.value = false;
     }

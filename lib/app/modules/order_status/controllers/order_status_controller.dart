@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/order_status.dart';
 import '../../../data/repositories/order_status_repository.dart';
+import '../../../core/controllers/global_data_controller.dart';
+import '../../../core/utils/toast_helper.dart';
 
 class OrderStatusController extends GetxController {
   final OrderStatusRepository _repository = OrderStatusRepository();
@@ -26,11 +28,7 @@ class OrderStatusController extends GetxController {
       final statuses = await _repository.getOrderStatuses();
       orderStatuses.assignAll(statuses);
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load order statuses: $e',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ToastHelper.showError('Failed to load order statuses: $e');
     } finally {
       isLoading.value = false;
     }
@@ -72,38 +70,18 @@ class OrderStatusController extends GetxController {
         }
       }
       
-      Get.snackbar(
-        'Success',
-        'Order item status updated',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF4CAF50),
-        colorText: Colors.white,
-      );
+      ToastHelper.showSuccess('Order item status updated');
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to update status: $e',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ToastHelper.showError('Failed to update status: $e');
     }
   }
 
   Future<void> sendBill(String orderId) async {
     try {
       await _repository.sendBill(orderId);
-      Get.snackbar(
-        'Success',
-        'Bill sent successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF4CAF50),
-        colorText: Colors.white,
-      );
+      ToastHelper.showSuccess('Bill sent successfully');
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to send bill: $e',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ToastHelper.showError('Failed to send bill: $e');
     }
   }
 
@@ -141,21 +119,16 @@ class OrderStatusController extends GetxController {
           }
         }
         
-        Get.snackbar(
-          'Success',
-          'Item deleted successfully',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: const Color(0xFF4CAF50),
-          colorText: Colors.white,
-        );
+        ToastHelper.showSuccess('Item deleted successfully');
+        
+        // Notify global controller to refresh bill data
+        try {
+          GlobalDataController.instance.notifyAllUpdates();
+        } catch (e) {
+          print('Global controller not found, skipping notification');
+        }
       } else {
-        Get.snackbar(
-          'Error',
-          'Cannot delete item. Order may be billed or item already processed.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        ToastHelper.showError('Cannot delete item. Order may be billed or item already processed.');
       }
     } catch (e) {
       print('🔥 Delete operation failed: $e');
@@ -169,16 +142,101 @@ class OrderStatusController extends GetxController {
         errorMessage = 'Failed to delete item. Please try again.';
       }
       
-      Get.snackbar(
-        'Error',
-        errorMessage,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: Duration(seconds: 5),
-      );
+      ToastHelper.showError(errorMessage);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> updateItemQuantity(String orderId, String itemId, int newQuantity) async {
+    try {
+      if (newQuantity <= 0) {
+        // If quantity is 0 or less, delete the item
+        await deleteOrderItem(orderId, itemId);
+        return;
+      }
+
+      isLoading.value = true;
+      
+      // Update quantity in local state first for immediate UI feedback
+      final orderIndex = orderStatuses.indexWhere((order) => order.id == orderId);
+      if (orderIndex != -1) {
+        final order = orderStatuses[orderIndex];
+        final itemIndex = order.items.indexWhere((item) => item.id == itemId);
+        if (itemIndex != -1) {
+          final oldItem = order.items[itemIndex];
+          final updatedItems = List<OrderItem>.from(order.items);
+          updatedItems[itemIndex] = OrderItem(
+            id: oldItem.id,
+            name: oldItem.name,
+            quantity: newQuantity,
+            status: oldItem.status,
+            isModified: true, // Mark as modified
+          );
+          
+          orderStatuses[orderIndex] = OrderStatus(
+            id: order.id,
+            tableNumber: order.tableNumber,
+            items: updatedItems,
+            createdAt: order.createdAt,
+            status: order.status,
+          );
+          orderStatuses.refresh();
+        }
+      }
+
+      // Call API to update quantity on backend
+      final success = await _repository.updateItemQuantity(itemId, newQuantity);
+      
+      if (success) {
+        ToastHelper.showSuccess('Quantity updated successfully');
+        
+        // Notify global controller to refresh bill data
+        try {
+          GlobalDataController.instance.notifyAllUpdates();
+        } catch (e) {
+          print('Global controller not found, skipping notification');
+        }
+      } else {
+        // Revert local changes if API call failed
+        await loadOrderStatuses();
+        ToastHelper.showError('Failed to update quantity on server. Changes reverted.');
+      }
+      
+    } catch (e) {
+      print('🔥 Update quantity failed: $e');
+      ToastHelper.showError('Failed to update quantity. Please try again.');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void incrementQuantity(String orderId, String itemId) {
+    final orderIndex = orderStatuses.indexWhere((order) => order.id == orderId);
+    if (orderIndex != -1) {
+      final order = orderStatuses[orderIndex];
+      final itemIndex = order.items.indexWhere((item) => item.id == itemId);
+      if (itemIndex != -1) {
+        final currentQuantity = order.items[itemIndex].quantity;
+        updateItemQuantity(orderId, itemId, currentQuantity + 1);
+      }
+    }
+  }
+
+  void decrementQuantity(String orderId, String itemId) {
+    final orderIndex = orderStatuses.indexWhere((order) => order.id == orderId);
+    if (orderIndex != -1) {
+      final order = orderStatuses[orderIndex];
+      final itemIndex = order.items.indexWhere((item) => item.id == itemId);
+      if (itemIndex != -1) {
+        final currentQuantity = order.items[itemIndex].quantity;
+        if (currentQuantity > 1) {
+          updateItemQuantity(orderId, itemId, currentQuantity - 1);
+        } else {
+          // If quantity becomes 0, delete the item
+          deleteOrderItem(orderId, itemId);
+        }
+      }
     }
   }
 

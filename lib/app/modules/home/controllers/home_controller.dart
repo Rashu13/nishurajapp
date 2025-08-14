@@ -4,6 +4,8 @@ import '../../../data/models/table_model.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../data/repositories/table_repository.dart';
 import '../../../routes/app_routes.dart';
+import '../../../core/controllers/global_data_controller.dart';
+import '../../../core/utils/toast_helper.dart';
 
 class HomeController extends GetxController {
   final MenuRepository _menuRepository = MenuRepository();
@@ -24,6 +26,23 @@ class HomeController extends GetxController {
     _tableRepository = Get.find<TableRepository>();
     loadMenuItems();
     loadTables();
+    
+    // Listen for global data updates to refresh table status
+    try {
+      ever(GlobalDataController.instance.tableDataUpdated, (_) {
+        print('🔄 Home Controller: Received table data update notification');
+        loadTables();
+      });
+    } catch (e) {
+      print('Global controller not found, continuing without listener');
+    }
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    // Refresh tables when view becomes ready/visible again
+    loadTables();
   }
 
   void loadMenuItems() async {
@@ -32,7 +51,7 @@ class HomeController extends GetxController {
       final items = await _menuRepository.getMenuItems();
       menuItems.value = items;
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load menu items');
+      ToastHelper.showError('Failed to load menu items');
     } finally {
       isLoading.value = false;
     }
@@ -56,6 +75,11 @@ class HomeController extends GetxController {
     } finally {
       isTablesLoading.value = false;
     }
+  }
+
+  // Add refresh method for external calls
+  Future<void> refreshTables() async {
+    loadTables();
   }
 
   void incrementGuest() {

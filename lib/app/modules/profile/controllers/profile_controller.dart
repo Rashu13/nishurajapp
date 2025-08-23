@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
 import '../../../core/utils/toast_helper.dart';
+import '../../../core/utils/session_manager.dart';
+import '../../../data/services/auth_service.dart';
 
 class ProfileController extends GetxController {
-  var userName = 'Krishna Sahu'.obs;
-  var userEmail = 'krishnasahu@gmail.com'.obs;
+  var userName = ''.obs;
+  var userEmail = ''.obs;
   var currentBalance = 240.50.obs;
   var totalEarned = 990.00.obs;
   
@@ -16,8 +18,32 @@ class ProfileController extends GetxController {
   var twoStepVerification = true.obs;
 
   get waiterInfo => null;
-
   get performance => null;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _loadUserData();
+  }
+
+  void _loadUserData() {
+    // Load actual user data from session
+    userName.value = SessionManager.displayName;
+    userEmail.value = AuthService.getEmailId() ?? 'No email available';
+    
+    // Print session data for debugging
+    print('🔍 Profile Controller - Loading User Data:');
+    print('👤 User ID: ${SessionManager.currentUserId}');
+    print('📧 User Name: ${SessionManager.displayName}');
+    print('💌 Email: ${AuthService.getEmailId()}');
+    print('🏢 Account Type: ${AuthService.getAccountType()}');
+    print('🔑 CSession: ${SessionManager.currentCSession}');
+    print('✅ Is Authenticated: ${SessionManager.isAuthenticated}');
+  }
+
+  void refreshUserData() {
+    _loadUserData();
+  }
   
   void toggleNotification(String type, bool value) {
     switch (type) {
@@ -62,5 +88,13 @@ class ProfileController extends GetxController {
 
   void changeLanguage() {}
 
-  void logout() {}
+  void logout() async {
+    try {
+      await SessionManager.logout();
+      ToastHelper.showSuccess('Logged out successfully');
+      Get.offAllNamed('/login');
+    } catch (e) {
+      ToastHelper.showError('Logout failed: $e');
+    }
+  }
 }

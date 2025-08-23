@@ -10,7 +10,7 @@ class BillDetailController extends GetxController {
   var isLoading = false.obs;
   
   // Check if bill is completed/billed
-  bool get isBillCompleted => bill.status.toLowerCase() == 'billed';
+  bool get isBillCompleted => bill.status.toLowerCase() == 'completed' || bill.status.toLowerCase() == 'billed';
 
   // Calculated values based on actual items (for active bills) or bill totals (for completed bills)
   double get calculatedSubtotal {
@@ -57,19 +57,30 @@ class BillDetailController extends GetxController {
   }
 
   Future<void> loadBillItems() async {
-    if (isBillCompleted) {
-      // For completed bills, don't fetch items - just show summary
-      print('📋 Bill ${bill.tableNumber} is completed. Showing summary only.');
-      isLoading.value = false;
-      return;
-    }
-    
     try {
       isLoading.value = true;
-      print('📋 Loading items for active bill: ${bill.tableNumber}');
-      final items = await BillApiProvider.fetchTableBillItems(bill.tableNumber);
-      billItems.assignAll(items.cast<Map<String, dynamic>>());
-      print('✅ Loaded ${billItems.length} items for table ${bill.tableNumber}');
+      
+      if (isBillCompleted) {
+        // For completed bills, create items based on bill info
+        print('📋 Bill ${bill.tableNumber} is completed (${bill.orderId}). Creating item summary.');
+        
+        // Create a single summary item for completed bills
+        Map<String, dynamic> summaryItem = {
+          'ItemName': '${bill.orderId} Items Summary',
+          'Qty': bill.personCount,
+          'Rate': bill.itemsTotal / bill.personCount, // Average rate per item
+          'NetAmt': bill.itemsTotal,
+        };
+        
+        billItems.assignAll([summaryItem]);
+        print('✅ Created summary for completed bill: ${bill.personCount} items, ₹${bill.itemsTotal}');
+      } else {
+        // For active bills, fetch actual items
+        print('📋 Loading items for active bill: ${bill.tableNumber}');
+        final items = await BillApiProvider.fetchTableBillItems(bill.tableNumber);
+        billItems.assignAll(items.cast<Map<String, dynamic>>());
+        print('✅ Loaded ${billItems.length} items for table ${bill.tableNumber}');
+      }
     } catch (e) {
       print('❌ Failed to load bill items: $e');
       ToastHelper.showError('Failed to load bill items: $e');

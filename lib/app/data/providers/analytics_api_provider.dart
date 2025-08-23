@@ -1,14 +1,13 @@
 import 'package:dio/dio.dart';
+import '../../core/config/api_config.dart';
+import '../../core/utils/api_error_handler.dart';
 
 class AnalyticsApiProvider {
   static Future<Map<String, dynamic>> fetchAnalyticsSummary(String period, {int? userId}) async {
     final dio = Dio();
-    final url = 'http://192.168.1.6:44351/api/kot/analytics/summary';
+    final url = ApiConfig.analyticsSummary;
     
     try {
-      print('🔥 Fetching analytics summary for period: $period');
-      print('🔥 API URL: $url');
-      
       // Convert period correctly
       String apiPeriod = _convertPeriodToApi(period);
       
@@ -21,40 +20,22 @@ class AnalyticsApiProvider {
         queryParams['userId'] = userId.toString();
       }
       
-      print('🔥 Query params: $queryParams');
-      print('🔥 Final URL: $url?${queryParams.entries.map((e) => '${e.key}=${e.value}').join('&')}');
-      
       final response = await dio.get(url, queryParameters: queryParams);
-      
-      print('🔥 Response status: ${response.statusCode}');
-      print('🔥 Response data: ${response.data}');
       
       if (response.statusCode == 200 && response.data is Map) {
         return response.data;
       }
-      throw Exception('Failed to fetch analytics summary - Status: ${response.statusCode}');
+      throw Exception(ApiErrorHandler.getErrorMessage('Invalid response format', context: 'analytics'));
     } catch (e) {
-      print('❌ Analytics summary API exception: $e');
-      if (e is DioException) {
-        print('❌ DioException type: ${e.type}');
-        print('❌ DioException message: ${e.message}');
-        if (e.response != null) {
-          print('❌ Response status: ${e.response?.statusCode}');
-          print('❌ Response data: ${e.response?.data}');
-        }
-      }
-      rethrow;
+      throw Exception(ApiErrorHandler.getErrorMessage(e, context: 'analytics'));
     }
   }
 
   static Future<List<dynamic>> fetchOrdersServedChart(String period, {int? userId}) async {
     final dio = Dio();
-    final url = 'http://192.168.1.6:44351/api/kot/analytics/orders-served';
+    final url = ApiConfig.ordersServed;
     
     try {
-      print('🔥 Fetching orders served chart for period: $period');
-      print('🔥 API URL: $url');
-      
       // Convert period correctly
       String apiPeriod = _convertPeriodToApi(period);
       
@@ -67,29 +48,14 @@ class AnalyticsApiProvider {
         queryParams['userId'] = userId.toString();
       }
       
-      print('🔥 Query params: $queryParams');
-      print('🔥 Final URL: $url?${queryParams.entries.map((e) => '${e.key}=${e.value}').join('&')}');
-      
       final response = await dio.get(url, queryParameters: queryParams);
-      
-      print('🔥 Response status: ${response.statusCode}');
-      print('🔥 Response data: ${response.data}');
       
       if (response.statusCode == 200 && response.data is List) {
         return response.data;
       }
-      throw Exception('Failed to fetch orders served chart - Status: ${response.statusCode}');
+      throw Exception(ApiErrorHandler.getErrorMessage('Invalid response format', context: 'analytics'));
     } catch (e) {
-      print('❌ Orders served chart API exception: $e');
-      if (e is DioException) {
-        print('❌ DioException type: ${e.type}');
-        print('❌ DioException message: ${e.message}');
-        if (e.response != null) {
-          print('❌ Response status: ${e.response?.statusCode}');
-          print('❌ Response data: ${e.response?.data}');
-        }
-      }
-      rethrow;
+      throw Exception(ApiErrorHandler.getErrorMessage(e, context: 'analytics'));
     }
   }
 

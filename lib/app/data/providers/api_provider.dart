@@ -1,13 +1,13 @@
 import 'package:dio/dio.dart' as dio;
 import 'package:dio/dio.dart' hide Response;
+import '../../core/config/api_config.dart';
 
 class ApiProvider {
-  static const String baseUrl = 'http://192.168.1.6:44351/api'; // Replace with actual API URL
   late Dio _dio;
 
   ApiProvider() {
     _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: ApiConfig.apiBaseUrl,
       connectTimeout: const Duration(milliseconds: 30000),
       receiveTimeout: const Duration(milliseconds: 30000),
       headers: {

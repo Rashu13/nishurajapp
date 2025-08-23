@@ -1,14 +1,14 @@
 import 'package:dio/dio.dart' as dio;
 import 'package:dio/dio.dart' hide Response;
 import '../models/table_model.dart';
+import '../../core/config/api_config.dart';
 
 class TableApiProvider {
-  static const String baseUrl = 'http://192.168.1.6:44351/api';
   late Dio _dio;
 
   TableApiProvider() {
     _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: ApiConfig.apiBaseUrl,
       connectTimeout: const Duration(milliseconds: 30000),
       receiveTimeout: const Duration(milliseconds: 30000),
       headers: {

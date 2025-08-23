@@ -1,13 +1,13 @@
 import 'package:dio/dio.dart';
 import '../models/menu_model.dart';
+import '../../core/config/api_config.dart';
 
 class ItemsApiProvider {
-  static const String baseUrl = 'http://192.168.1.6:44351/api';
   late Dio _dio;
 
   ItemsApiProvider() {
     _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: ApiConfig.apiBaseUrl,
       connectTimeout: const Duration(milliseconds: 30000),
       receiveTimeout: const Duration(milliseconds: 30000),
       headers: {

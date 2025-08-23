@@ -6,6 +6,9 @@ import '../controllers/home_controller.dart';
 import '../../../routes/app_routes.dart';
 import '../../../widgets/common_bottom_navigation_bar.dart';
 import '../../../data/models/table_model.dart';
+import '../../../core/utils/session_manager.dart';
+import '../../../data/services/auth_service.dart';
+import '../../../data/services/bill_service.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -43,6 +46,15 @@ class HomeView extends GetView<HomeController> {
           ],
         ),
         actions: [
+          // Debug Session Button
+          IconButton(
+            onPressed: () => _showSessionDebug(context),
+            icon: const Icon(
+              Icons.bug_report,
+              color: Colors.purple,
+            ),
+            tooltip: 'Debug Session Data',
+          ),
           // Refresh tables button
           IconButton(
             onPressed: () => controller.refreshTables(),
@@ -349,6 +361,204 @@ class HomeView extends GetView<HomeController> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showSessionDebug(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '🔍 Session Debug Info',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildDebugInfo(),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Get.back();
+                      try {
+                        Get.dialog(
+                          const Center(child: CircularProgressIndicator()),
+                          barrierDismissible: false,
+                        );
+                        
+                        // Test login with dummy data
+                        final result = await AuthService.login('admin', 'admin123');
+                        Get.back(); // Close loading dialog
+                        
+                        if (result != null) {
+                          Get.snackbar(
+                            'Test Login Success',
+                            'User: ${result['User_Name']}\nCSession: ${result['CSession']}',
+                            backgroundColor: Colors.green,
+                            colorText: Colors.white,
+                            duration: const Duration(seconds: 5),
+                          );
+                        } else {
+                          Get.snackbar(
+                            'Test Login Failed',
+                            'Invalid credentials or server error',
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                        }
+                      } catch (e) {
+                        Get.back(); // Close loading dialog
+                        Get.snackbar(
+                          'Login Error',
+                          e.toString(),
+                          backgroundColor: Colors.orange,
+                          colorText: Colors.white,
+                        );
+                      }
+                    },
+                    child: const Text('Test Login'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Get.back();
+                      await SessionManager.logout();
+                      Get.snackbar(
+                        'Logout Success',
+                        'All session data cleared',
+                        backgroundColor: Colors.blue,
+                        colorText: Colors.white,
+                      );
+                    },
+                    child: const Text('Test Logout'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // KOT Test Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                ),
+                onPressed: () async {
+                  Get.back();
+                  try {
+                    Get.dialog(
+                      const Center(child: CircularProgressIndicator()),
+                      barrierDismissible: false,
+                    );
+                    
+                    // Test KOT API
+                    final billService = BillService();
+                    final result = await billService.testKOTEndpoint();
+                    Get.back(); // Close loading dialog
+                    
+                    if (result['success'] == true) {
+                      Get.snackbar(
+                        'KOT Test Success',
+                        'API is working properly!\nStatus: ${result['statusCode']}',
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                        duration: const Duration(seconds: 5),
+                      );
+                    } else {
+                      Get.snackbar(
+                        'KOT Test Failed',
+                        'Error: ${result['error']}\nDetails: ${result['details'] ?? ''}',
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                        duration: const Duration(seconds: 5),
+                      );
+                    }
+                  } catch (e) {
+                    Get.back(); // Close loading dialog
+                    Get.snackbar(
+                      'KOT Test Error',
+                      e.toString(),
+                      backgroundColor: Colors.red,
+                      colorText: Colors.white,
+                    );
+                  }
+                },
+                child: const Text('🧪 Test KOT API'),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Get.back(),
+                child: const Text('Close'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDebugInfo() {
+    // GetStorage raw data
+    final box = GetStorage();
+    final userData = box.read('userData');
+    final isLoggedIn = box.read('isLoggedIn');
+    final userId = box.read('userId');
+    final cSession = box.read('cSession');
+    final userName = box.read('userName');
+    final email = box.read('emailId');
+    final accountType = box.read('accountType');
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('📱 GetStorage Raw Data:', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text('isLoggedIn: $isLoggedIn'),
+          Text('userId: $userId'),
+          Text('userName: $userName'),
+          Text('emailId: $email'),
+          Text('accountType: $accountType'),
+          Text('cSession: $cSession'),
+          const SizedBox(height: 12),
+          Text('� SessionManager Data:', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text('isAuthenticated: ${SessionManager.isAuthenticated}'),
+          Text('currentUserId: ${SessionManager.currentUserId}'),
+          Text('displayName: ${SessionManager.displayName}'),
+          Text('currentCSession: ${SessionManager.currentCSession}'),
+          const SizedBox(height: 12),
+          Text('🔐 AuthService Data:', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text('isUserLoggedIn: ${AuthService.isUserLoggedIn()}'),
+          Text('getUserId: ${AuthService.getUserId()}'),
+          Text('getUserName: ${AuthService.getUserName()}'),
+          Text('getEmailId: ${AuthService.getEmailId()}'),
+          Text('getCSession: ${AuthService.getCSession()}'),
+          const SizedBox(height: 12),
+          Text('�📦 Complete userData:', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text('$userData', style: TextStyle(fontSize: 12)),
+        ],
       ),
     );
   }

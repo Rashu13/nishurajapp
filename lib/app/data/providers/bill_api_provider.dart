@@ -1,26 +1,51 @@
 import 'package:dio/dio.dart';
+import '../../core/config/api_config.dart';
+import '../../core/utils/api_error_handler.dart';
 
 class BillApiProvider {
   static Future<List<dynamic>> fetchTableBillSummary() async {
     final dio = Dio();
-    final url = 'http://192.168.1.6:44351/api/kot/table-bill-summary';
+    final url = ApiConfig.individualTableBills;
     
     try {
-      print('🔥 Fetching table bill summary');
-      print('🔥 API URL: $url');
-      
       final response = await dio.get(url);
-      
-      print('🔥 Response status: ${response.statusCode}');
-      print('🔥 Response data: ${response.data}');
       
       if (response.statusCode == 200 && response.data is List) {
         return response.data;
       }
-      throw Exception('Failed to fetch table bill summary');
+      throw Exception(ApiErrorHandler.getErrorMessage('Invalid response format', context: 'bills'));
     } catch (e) {
-      print('❌ Bill API exception: $e');
-      throw Exception('Failed to fetch table bill summary: $e');
+      throw Exception(ApiErrorHandler.getErrorMessage(e, context: 'bills'));
+    }
+  }
+
+  static Future<bool> resetTable(int tableId) async {
+    final dio = Dio();
+    final url = ApiConfig.resetTable;
+    
+    try {
+      final response = await dio.post(url, 
+        data: {'tableId': tableId},
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+      
+      if (response.statusCode == 200) {
+        // Handle both boolean and object responses
+        if (response.data is bool) {
+          return response.data;
+        } else if (response.data is Map) {
+          return response.data['Success'] == true || response.data['success'] == true;
+        }
+        return true; // Success if status 200
+      }
+      return false;
+    } catch (e) {
+      // Don't throw exception for better UX, just return false
+      return false;
     }
   }
 
@@ -28,14 +53,10 @@ class BillApiProvider {
     final dio = Dio();
     
     try {
-      print('🔥 Fetching table bill items for: $tableName');
-      
       // Only use the existing active items endpoint
-      final activeUrl = 'http://192.168.1.6:44351/api/kot/active-table-items';
-      print('🔥 API URL: $activeUrl');
+      final activeUrl = ApiConfig.activeTableItems;
       
       final response = await dio.get(activeUrl);
-      print('🔥 Response status: ${response.statusCode}');
       
       if (response.statusCode == 200 && response.data is List) {
         final allItems = response.data as List;
@@ -43,15 +64,13 @@ class BillApiProvider {
           return item['TableName'] == tableName;
         }).toList();
         
-        print('🔥 Found ${tableItems.length} items for table $tableName');
         return tableItems;
       }
       
-      throw Exception('Failed to fetch table bill items');
+      throw Exception(ApiErrorHandler.getErrorMessage('Invalid response format', context: 'orders'));
       
     } catch (e) {
-      print('❌ Bill items API exception: $e');
-      throw Exception('Failed to fetch table bill items: $e');
+      throw Exception(ApiErrorHandler.getErrorMessage(e, context: 'orders'));
     }
   }
 }

@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'constant.dart';
-import 'style.dart';
 
 class LoaderCircle extends StatelessWidget {
   const LoaderCircle({super.key});
@@ -19,16 +18,16 @@ class LoaderCircle extends StatelessWidget {
           ),
         ),
         Container(
-          height: ScreenSize(context).block * 20,
-          width: ScreenSize(context).block * 20,
+          height: 80, // Fixed smaller size
+          width: 80,  // Fixed smaller size
           decoration: const BoxDecoration(
             color: Colors.white,
             shape: BoxShape.circle,
           ),
           child: Center(
             child: Container(
-              height: ScreenSize(context).block * 15,
-              width: ScreenSize(context).block * 15,
+              height: 60, // Fixed smaller size
+              width: 60,  // Fixed smaller size
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
@@ -38,8 +37,8 @@ class LoaderCircle extends StatelessWidget {
                   borderRadius: BorderRadius.circular(50),
                   child: Image.asset(
                     Images.logo,
-                    height: ScreenSize(context).block * 20,
-                    width: ScreenSize(context).block * 20,
+                    height: 50, // Fixed smaller size
+                    width: 50,  // Fixed smaller size
                   ),
                 ),
               ),

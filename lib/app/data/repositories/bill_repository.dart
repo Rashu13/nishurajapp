@@ -14,19 +14,34 @@ class BillRepository {
   List<Bill> _parseTableBillSummary(List<dynamic> data) {
     return data.map((item) {
       final map = Map<String, dynamic>.from(item);
+      
+      // Parse new individual bills API format
+      String billId = map['BillID']?.toString() ?? 'BILL_${map['TableID']}_${map['KOTNumber']}';
+      String orderId = 'KOT${map['KOTNumber']}'; // Short order ID
+      String status = map['Status']?.toString() ?? 'Completed'; // Use backend status directly
+      
       return Bill(
-        id: 'BILL_${map['TableID']}',
-        tableNumber: map['TableName'] ?? '',
-        personCount: map['ItemCount'] ?? 0, // Using ItemCount as person count for now
-        orderId: 'ORD_${map['TableID']}',
-        serverId: map['UserName'] ?? 'Unknown',
-        items: [], // We'll populate this when user clicks on bill
-        itemsTotal: (map['Gross'] as num?)?.toDouble() ?? 0.0,
-        gst: (map['GST'] as num?)?.toDouble() ?? 0.0,
-        total: (map['GrandTotal'] as num?)?.toDouble() ?? 0.0,
-        createdAt: DateTime.now(),
-        status: map['KOTStatus'] ?? 'pending',
+        id: billId,
+        tableNumber: map['TableName']?.toString() ?? '',
+        personCount: map['ItemCount'] ?? 0,
+        orderId: orderId,
+        userName: map['UserName']?.toString() ?? 'Unknown',
+        serverId: 'Server ${map['StewardID'] ?? '1'}',
+        items: [],
+        itemsTotal: (map['GrossAmount'] as num?)?.toDouble() ?? 0.0,
+        gst: ((map['TotalAmount'] as num?)?.toDouble() ?? 0.0) - ((map['GrossAmount'] as num?)?.toDouble() ?? 0.0),
+        total: (map['TotalAmount'] as num?)?.toDouble() ?? 0.0,
+        createdAt: DateTime.tryParse(map['BillDate']?.toString() ?? '') ?? DateTime.now(),
+        status: status, // Use status from backend as-is
       );
     }).toList();
+  }
+
+  Future<bool> resetTable(int tableId) async {
+    try {
+      return await BillApiProvider.resetTable(tableId);
+    } catch (e) {
+      throw Exception('Failed to reset table: $e');
+    }
   }
 }

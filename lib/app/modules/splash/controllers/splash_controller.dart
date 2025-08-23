@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../../../routes/app_routes.dart';
-import 'package:get_storage/get_storage.dart';
+import '../../../data/services/auth_service.dart';
 
 class SplashController extends GetxController {
   @override
@@ -11,22 +11,17 @@ class SplashController extends GetxController {
 
   void _navigateToNext() async {
     await Future.delayed(const Duration(seconds: 2));
-    final box = GetStorage();
-    final user = box.read('user');
-    final loginTime = box.read('loginTime');
-    bool isLoggedIn = false;
-    if (user != null && loginTime != null) {
-      final loginDate = DateTime.tryParse(loginTime.toString());
-      if (loginDate != null) {
-        final now = DateTime.now();
-        if (now.difference(loginDate).inDays < 3) {
-          isLoggedIn = true;
-        }
-      }
-    }
+    
+    // Use AuthService to check login status
+    bool isLoggedIn = AuthService.isUserLoggedIn();
+    
     if (isLoggedIn) {
+      final userData = AuthService.getCurrentUser();
+      print('🔄 User found in storage: ${userData?['User_Name']}');
+      print('🔑 CSession: ${AuthService.getCSession()}');
       Get.offNamed(AppRoutes.HOME);
     } else {
+      print('🚪 No user session found, redirecting to login');
       Get.offNamed('/login');
     }
   }

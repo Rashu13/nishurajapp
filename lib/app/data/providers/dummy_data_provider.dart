@@ -132,6 +132,7 @@ class DummyDataProvider {
       tableNumber: '02',
       personCount: 2,
       orderId: orderId,
+      userName: 'John Doe', // Example user name
       serverId: '#4447',
       items: [
         BillItem(

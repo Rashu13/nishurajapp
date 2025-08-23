@@ -4,6 +4,7 @@ class Bill {
   final int personCount;
   final String orderId;
   final String serverId;
+  final String userName; // Added userId to track who generated the bill
   final List<BillItem> items;
   final double itemsTotal;
   final double discount;
@@ -18,6 +19,7 @@ class Bill {
     required this.personCount,
     required this.orderId,
     required this.serverId,
+    required this.userName,
     required this.items,
     required this.itemsTotal,
     this.discount = 0.0,
@@ -34,6 +36,7 @@ class Bill {
       personCount: json['person_count'],
       orderId: json['order_id'],
       serverId: json['server_id'],
+      userName: json['user_name'],
       items: (json['items'] as List)
           .map((item) => BillItem.fromJson(item))
           .toList(),
@@ -53,6 +56,7 @@ class Bill {
       'person_count': personCount,
       'order_id': orderId,
       'server_id': serverId,
+      'user_name': userName,
       'items': items.map((item) => item.toJson()).toList(),
       'items_total': itemsTotal,
       'discount': discount,

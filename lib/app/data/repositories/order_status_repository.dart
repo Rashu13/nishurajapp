@@ -1,29 +1,47 @@
 import '../models/order_status.dart';
 import '../providers/order_status_api_provider.dart';
+import '../providers/bill_api_provider.dart';
 
 class OrderStatusRepository {
   Future<List<OrderStatus>> getOrderStatuses() async {
     try {
-      final data = await OrderStatusApiProvider.fetchActiveTableItems();
-      // Convert API response to OrderStatus list
-      return _parseOrderStatusList(data);
+      // First get individual bills to identify running orders
+      final billsData = await BillApiProvider.fetchTableBillSummary();
+      final runningBills = billsData.where((bill) => 
+        bill['Status']?.toString().toLowerCase() == 'running'
+      ).toList();
+      
+      if (runningBills.isEmpty) {
+        return []; // No running orders
+      }
+      
+      // Get active table items for running bills only
+      final activeItemsData = await OrderStatusApiProvider.fetchActiveTableItems();
+      
+      // Convert API response to OrderStatus list for running bills only
+      return _parseOrderStatusList(activeItemsData, runningBills);
     } catch (e) {
       throw Exception('Failed to load order statuses: $e');
     }
   }
 
-  List<OrderStatus> _parseOrderStatusList(List<dynamic> data) {
-    // Filter out billed items first
-    final activeBillingData = data.where((item) {
+  List<OrderStatus> _parseOrderStatusList(List<dynamic> itemsData, List<dynamic> runningBills) {
+    // Get table IDs of running bills
+    final runningTableIds = runningBills.map((bill) => bill['TableID']).toSet();
+    
+    // Filter items to only include those from running tables
+    final runningItemsData = itemsData.where((item) {
       final map = Map<String, dynamic>.from(item);
-      // Filter out items that are already billed
+      final tableId = map['TableID'];
       final kotStatus = map['KOTStatus'] ?? '';
-      return kotStatus != 'Billed';
+      
+      // Include items from running tables that are not already billed
+      return runningTableIds.contains(tableId) && kotStatus != 'Billed';
     }).toList();
     
     // Group items by TableID+OrderNo to create OrderStatus objects
     final Map<String, List<Map<String, dynamic>>> grouped = {};
-    for (final item in activeBillingData) {
+    for (final item in runningItemsData) {
       final map = Map<String, dynamic>.from(item);
       final key = '${map['TableID']}_${map['OrderNo']}';
       grouped.putIfAbsent(key, () => []).add(map);

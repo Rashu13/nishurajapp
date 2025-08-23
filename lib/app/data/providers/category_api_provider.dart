@@ -1,13 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:serv/app/data/models/category_model.dart';
+import '../../core/config/api_config.dart';
 
 class CategoryApiProvider {
-  static const String baseUrl = 'http://192.168.1.6:44351/api';
   late Dio _dio;
 
   CategoryApiProvider() {
     _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: ApiConfig.apiBaseUrl,
       connectTimeout: const Duration(milliseconds: 30000),
       receiveTimeout: const Duration(milliseconds: 30000),
       headers: {

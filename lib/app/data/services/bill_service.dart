@@ -123,7 +123,7 @@ class BillService {
       
       if (response.statusCode == 200) {
         final responseData = response.data;
-        print('✅ KOT Success: ${responseData}');
+        print('✅ KOT Success: $responseData');
         
         return {
           'success': true,
@@ -569,6 +569,107 @@ class BillService {
         'error': e.toString(),
         'message': 'Test failed'
       };
+    }
+  }
+
+  // Switch table functionality
+  Future<Map<String, dynamic>> switchTable({
+    required int oldTableId,
+    required int newTableId,
+  }) async {
+    try {
+      print('🔄 Switching table from $oldTableId to $newTableId');
+      
+      // Validate session
+      final userId = SessionManager.currentUserId;
+      final cSession = SessionManager.currentCSession;
+      
+      if (userId == null || cSession == null) {
+        throw Exception('Session expired. Please login again.');
+      }
+      
+      // Validate table IDs
+      if (oldTableId == newTableId) {
+        throw Exception('Cannot switch to the same table');
+      }
+      
+      if (oldTableId <= 0 || newTableId <= 0) {
+        throw Exception('Invalid table selection');
+      }
+      
+      final requestData = {
+        'OldTableID': oldTableId,
+        'NewTableID': newTableId,
+      };
+      
+      print('📤 Sending table switch request: $requestData');
+      
+      final response = await _apiService.post('/api/kot/table/switch', requestData);
+      
+      print('📥 Table Switch Response Status: ${response.statusCode}');
+      print('📥 Response Data: ${response.data}');
+      
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        
+        return {
+          'success': true,
+          'message': responseData['Message'] ?? 'Table switched successfully',
+          'data': responseData
+        };
+      } else {
+        print('❌ Table Switch Failed: Status ${response.statusCode}');
+        print('❌ Error Details: ${response.data}');
+        
+        String errorMessage = 'Table switch failed';
+        if (response.data != null) {
+          if (response.data is Map && response.data['Message'] != null) {
+            errorMessage = response.data['Message'];
+          } else if (response.data is String) {
+            errorMessage = response.data;
+          }
+        }
+        
+        throw Exception('Table Switch Error: ${response.statusCode} - $errorMessage');
+      }
+      
+    } catch (e) {
+      print('🚨 Table Switch Exception: $e');
+      
+      // Parse server error details
+      String errorDetails = e.toString();
+      
+      if (e.toString().contains('DioException')) {
+        try {
+          RegExp statusCodeRegex = RegExp(r'status code of (\d+)');
+          Match? statusMatch = statusCodeRegex.firstMatch(e.toString());
+          
+          if (statusMatch != null) {
+            String statusCode = statusMatch.group(1)!;
+            print('🚨 Server returned error code: $statusCode');
+            
+            if (statusCode == '500') {
+              errorDetails = 'Server Error: Unable to switch table. Please try again.';
+            } else if (statusCode == '400') {
+              errorDetails = 'Bad Request: Invalid table switch request.';
+            } else if (statusCode == '404') {
+              errorDetails = 'Table not found. Please refresh and try again.';
+            } else {
+              errorDetails = 'Server Error ($statusCode): Unable to switch table.';
+            }
+          }
+        } catch (parseError) {
+          print('🚨 Error parsing DioException: $parseError');
+        }
+      }
+      
+      if (e.toString().contains('SocketException') || e.toString().contains('timeout')) {
+        throw Exception('Network error: Please check your internet connection');
+      } else if (e.toString().contains('session')) {
+        throw Exception('Session expired: Please login again');
+      } else {
+        throw Exception(errorDetails);
+      }
     }
   }
 }

@@ -31,7 +31,12 @@ class AnalyticsView extends GetView<AnalyticsController> {
         centerTitle: false,
         actions: [
           IconButton(
-            onPressed: () => controller.loadAnalyticsData(),
+            onPressed: () {
+              // Now using real API data since endpoints are ready
+              controller.loadAnalyticsData();
+              // Dummy data commented out since API is working
+              // controller.loadDummyData();
+            },
             icon: const Icon(
               Icons.refresh,
               color: Color(0xFFFF6B35),

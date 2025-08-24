@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../../../data/repositories/analytics_repository.dart';
 import '../../../data/models/analytics.dart';
 import '../../../core/utils/toast_helper.dart';
+import '../../../core/utils/session_manager.dart';
 
 class AnalyticsController extends GetxController {
   final AnalyticsRepository _repository = AnalyticsRepository();
@@ -20,12 +21,26 @@ class AnalyticsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    
+    // Debug session info
+    print('🔍 Analytics Controller Init - Session Info:');
+    print('   User ID: ${SessionManager.currentUserId}');
+    print('   User Name: ${SessionManager.displayName}');
+    print('   CSession: ${SessionManager.currentCSession}');
+    print('   Is Authenticated: ${SessionManager.isAuthenticated}');
+    
+    // Now using real API data since endpoints are ready
     loadAnalyticsData();
+    // Dummy data commented out since API is working
+    // loadDummyData();
   }
   
   void changePeriod(String period) {
     selectedPeriod.value = period;
+    // Now using real API data since endpoints are ready
     loadAnalyticsData();
+    // Dummy data commented out since API is working
+    // loadDummyData();
   }
   
   Future<void> loadAnalyticsData() async {
@@ -35,38 +50,75 @@ class AnalyticsController extends GetxController {
       // Use the selected period directly - API provider will handle conversion
       String period = selectedPeriod.value;
       
-      // For now, using userId = 1 as seen in your Postman test
-      // You can modify this to get from login session or user preferences
-      int userId = 1;
+      // Get actual user ID from session manager
+      String? userIdString = SessionManager.currentUserId;
       
-      print('🔥 Loading analytics for period: $period with userId: $userId');
+      if (userIdString == null) {
+        print('❌ No user ID found in session');
+        ToastHelper.showError('User session not found. Please login again.');
+        loadDummyData();
+        return;
+      }
+      
+      int? userId = int.tryParse(userIdString);
+      
+      if (userId == null) {
+        print('❌ Invalid user ID format: $userIdString');
+        ToastHelper.showError('Invalid user session. Please login again.');
+        loadDummyData();
+        return;
+      }
+      
+      print('🔥 Loading analytics for period: $period with userId: $userId (from string: $userIdString)');
       
       // Load summary data
-      final summary = await _repository.getAnalyticsSummary(period, userId: userId);
-      totalRevenue.value = summary.totalRevenue;
-      totalOrders.value = summary.totalOrders;
-      averageOrderValue.value = summary.averageOrderValue;
-      
-      print('✅ Summary loaded: Revenue=${summary.totalRevenue}, Orders=${summary.totalOrders}');
+      try {
+        final summary = await _repository.getAnalyticsSummary(period, userId: userId);
+        totalRevenue.value = summary.totalRevenue;
+        totalOrders.value = summary.totalOrders;
+        averageOrderValue.value = summary.averageOrderValue;
+        
+        print('✅ Summary loaded: Revenue=${summary.totalRevenue}, Orders=${summary.totalOrders}, AOV=${summary.averageOrderValue}');
+      } catch (summaryError) {
+        print('❌ Summary API failed: $summaryError');
+        ToastHelper.showError('Summary data not available');
+      }
       
       // Load chart data
-      final chartData = await _repository.getOrdersServedChart(period, userId: userId);
-      ordersServedData.assignAll(chartData);
+      try {
+        final chartData = await _repository.getOrdersServedChart(period, userId: userId);
+        ordersServedData.assignAll(chartData);
+        
+        print('✅ Chart data loaded: ${chartData.length} items');
+        if (chartData.isNotEmpty) {
+          print('First chart item: ${chartData.first.day} - ${chartData.first.orders} orders');
+        }
+      } catch (chartError) {
+        print('❌ Chart API failed: $chartError');
+        // Keep empty chart data if API fails
+        ordersServedData.clear();
+      }
       
-      print('✅ Chart data loaded: ${chartData.length} items');
+      // If both APIs failed completely, show dummy data as last resort
+      if (totalRevenue.value == 0 && totalOrders.value == 0 && ordersServedData.isEmpty) {
+        print('🔄 Both APIs failed, loading dummy data as last resort');
+        loadDummyData();
+      } else {
+        print('✅ Analytics data loaded successfully');
+      }
       
     } catch (e) {
       print('❌ Analytics loading error: $e');
       ToastHelper.showError('Failed to load analytics data: ${e.toString()}');
       
-      // Fallback to dummy data if API fails
-      _loadDummyData();
+      // Fallback to dummy data if everything fails
+      loadDummyData();
     } finally {
       isLoading.value = false;
     }
   }
   
-  void _loadDummyData() {
+  void loadDummyData() {
     // Fallback dummy data based on selected period
     switch (selectedPeriod.value) {
       case 'This Week':

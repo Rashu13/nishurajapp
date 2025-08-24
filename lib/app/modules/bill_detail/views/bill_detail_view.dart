@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../data/models/bill.dart';
+
 import '../controllers/bill_detail_controller.dart';
 import 'package:serv/app/global/widgets/loader.dart';
 
@@ -61,7 +61,7 @@ class BillDetailView extends GetView<BillDetailController> {
                 const SizedBox(height: 12),
                 
                 // Items List (only for active bills)
-                ...controller.billItems.map((item) => _buildItemCard(item)).toList(),
+                ...controller.billItems.map((item) => _buildItemCard(item)),
                 
                 // Show empty state if no items
                 if (controller.billItems.isEmpty)
@@ -248,7 +248,7 @@ class BillDetailView extends GetView<BillDetailController> {
               Icon(Icons.person, size: 16, color: Colors.grey[600]),
               const SizedBox(width: 8),
               Text(
-                'Server: ${controller.bill.serverId}',
+                'Steward: ${controller.bill.userName}',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[600],
@@ -408,7 +408,7 @@ class BillDetailView extends GetView<BillDetailController> {
       children: [
         Expanded(
           child: ElevatedButton(
-            onPressed: () => controller.printBill(),
+            onPressed: () => controller.printKOT(),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2D3142),
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -417,7 +417,7 @@ class BillDetailView extends GetView<BillDetailController> {
               ),
             ),
             child: const Text(
-              'Print Bill',
+              'Print KOT',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,

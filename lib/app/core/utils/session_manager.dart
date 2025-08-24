@@ -5,7 +5,11 @@ class SessionManager {
   static int? get currentCSession => AuthService.getCSession();
   
   // Get current user ID
-  static int? get currentUserId => AuthService.getUserId();
+  static String? get currentUserId {
+    final userId = AuthService.getUserId();
+    print('📊 SessionManager - Getting User ID: $userId');
+    return userId?.toString();
+  }
   
   // Get current user details
   static Map<String, String> get currentUserDetails => {

@@ -147,7 +147,7 @@ class BillGenerationView extends GetView<BillGenerationController> {
                           Text(
                             'Table ${bill.tableNumber}',
                             style: const TextStyle(
-                              fontSize: 18,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF2D3142),
                             ),
@@ -208,7 +208,7 @@ class BillGenerationView extends GetView<BillGenerationController> {
                     child: _buildInfoItem(
                       icon: Icons.person_outline,
                       label: 'Steward',
-                      value: bill.userName,
+                      value: bill.userName.toUpperCase(),
                     ),
                   ),
                   const SizedBox(width: 16),

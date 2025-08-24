@@ -4,6 +4,7 @@ import '../../../data/models/menu_model.dart';
 import '../../../data/services/bill_service.dart';
 import '../../../data/models/table_model.dart';
 import '../../../core/utils/toast_helper.dart';
+import '../../../core/controllers/global_data_controller.dart';
 
 class OrderSummaryController extends GetxController {
   final BillService _billService = BillService();
@@ -82,6 +83,14 @@ class OrderSummaryController extends GetxController {
       isLoading.value = false;
       
       print('Kitchen order result: $result');
+      
+      // Refresh tables globally after successful KOT
+      try {
+        GlobalDataController.instance.notifyTableUpdate();
+        print('🔄 Notified global data controller to refresh tables');
+      } catch (e) {
+        print('🚨 Failed to notify global controller: $e');
+      }
       
       // Show success dialog with API response data
       _showSuccessDialog(

@@ -89,6 +89,11 @@ class BillDetailController extends GetxController {
     }
   }
 
+  void printKOT() {
+    // Show KOT thermal print preview dialog directly
+    _showKOTThermalPrintPreview();
+  }
+
   void printBill() {
     // Show thermal print preview dialog directly
     _showThermalPrintPreview();
@@ -255,7 +260,7 @@ class BillDetailController extends GetxController {
                             ),
                             const SizedBox(height: 2),
                           ],
-                        )).toList(),
+                        )),
                         
                         const SizedBox(height: 4),
                         
@@ -424,6 +429,303 @@ class BillDetailController extends GetxController {
     );
   }
 
+  void _showKOTThermalPrintPreview() {
+    final currentTime = DateTime.now();
+    final timeString = "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')}";
+    final dateString = "${currentTime.day.toString().padLeft(2, '0')}/${currentTime.month.toString().padLeft(2, '0')}/${currentTime.year}";
+    
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 400,
+          height: 600,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'KOT - Kitchen Order Ticket',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D3142),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Thermal Print Preview Container (57mm width simulation)
+              Expanded(
+                child: Container(
+                  width: 200, // Simulating 57mm thermal paper width
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 3,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      children: [
+                        // Restaurant Header
+                        Text(
+                          'SERV RESTAURANT',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(
+                          '--- KITCHEN COPY ---',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '=============================',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        
+                        const SizedBox(height: 4),
+                        
+                        // KOT Details
+                        Text(
+                          'Table: ${bill.tableNumber}     KOT: ${bill.orderId}',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        
+                        Text(
+                          'Date: $dateString  Time: $timeString',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        
+                        Text(
+                          'Waiter: ${bill.userName}',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        
+                        const SizedBox(height: 2),
+                        Text(
+                          '=============================',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        
+                        const SizedBox(height: 4),
+                        
+                        // Items Header (NO AMOUNT COLUMN)
+                        Text(
+                          'ITEM NAME              QTY',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        
+                        Text(
+                          '-----------------------------',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        
+                        // Items List (NO RATES OR AMOUNTS)
+                        ...billItems.map((item) => Text(
+                          _formatKOTItemLine(
+                            (item['ItemName'] ?? 'Unknown Item').toString(),
+                            (item['Qty'] as num?)?.toInt() ?? 0,
+                          ),
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontFamily: 'monospace',
+                          ),
+                        )),
+                        
+                        const SizedBox(height: 8),
+                        
+                        Text(
+                          '-----------------------------',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        
+                        Text(
+                          'Total Items: ${billItems.length}',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        
+                        const SizedBox(height: 8),
+                        
+                        Text(
+                          'Special Instructions:',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        
+                        Text(
+                          '____________________________',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        
+                        Text(
+                          '____________________________',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        
+                        const SizedBox(height: 8),
+                        
+                        Text(
+                          '=============================',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        
+                        Text(
+                          '** KITCHEN COPY **',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        
+                        Text(
+                          'NO RATES - KITCHEN USE ONLY',
+                          style: TextStyle(
+                            fontSize: 7,
+                            fontFamily: 'monospace',
+                            fontStyle: FontStyle.italic,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Get.back(),
+                      icon: const Icon(Icons.close, size: 18),
+                      label: const Text('Close'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF2D3142),
+                        side: const BorderSide(color: Color(0xFF2D3142)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 12),
+                  
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Get.back();
+                        ToastHelper.showSuccess('KOT sent to kitchen printer!');
+                      },
+                      icon: const Icon(Icons.print, color: Colors.white, size: 18),
+                      label: const Text(
+                        'Print KOT',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4CAF50),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void proceedToPayment() {
     Get.toNamed('/payment_method', arguments: bill);
   }
@@ -456,5 +758,24 @@ class BillDetailController extends GetxController {
     if (spacesNeeded < 1) spacesNeeded = 1;
     String spaces = ' ' * spacesNeeded;
     return '$label$spaces$amtStr';
+  }
+
+  // Helper function to format KOT item line with only name and quantity (no amounts)
+  String _formatKOTItemLine(String itemName, int qty) {
+    // Truncate item name if too long (max 22 chars for KOT format)
+    String shortName = itemName.length > 22 ? 
+      itemName.substring(0, 22) : itemName;
+    
+    // Pad the line to ensure proper alignment
+    String qtyStr = qty.toString().padLeft(3);
+    
+    // Calculate spacing
+    int nameLength = shortName.length;
+    int spacesNeeded = 29 - nameLength - qtyStr.length;
+    if (spacesNeeded < 1) spacesNeeded = 1;
+    
+    String spaces = ' ' * spacesNeeded;
+    
+    return '$shortName$spaces$qtyStr';
   }
 }

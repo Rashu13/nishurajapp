@@ -452,36 +452,36 @@ class MenuView extends GetView<MenuPageController> {
                             GestureDetector(
                               onTap: () => controller.addToCartWithCustomization(item),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                 decoration: BoxDecoration(
                                   border: Border.all(color: const Color(0xFFFF6B35)),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: const Text(
-                                  'Customize',
+                                  'Custom',
                                   style: TextStyle(
                                     color: Color(0xFFFF6B35),
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 5),
+                            const SizedBox(width: 3),
                             // Add to order button
                             GestureDetector(
                               onTap: () => controller.addToCart(item),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFFF6B35),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: const Text(
-                                  'Add to order',
+                                  'Add',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -494,7 +494,7 @@ class MenuView extends GetView<MenuPageController> {
                       return Container(
                         decoration: BoxDecoration(
                           border: Border.all(color: const Color(0xFFFF6B35)),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -502,31 +502,32 @@ class MenuView extends GetView<MenuPageController> {
                             GestureDetector(
                               onTap: () => controller.removeFromCart(item),
                               child: Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(6),
                                 child: const Icon(
                                   Icons.remove,
-                                  size: 16,
+                                  size: 14,
                                   color: Color(0xFFFF6B35),
                                 ),
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                               child: Text(
                                 quantity.toString(),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFFFF6B35),
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
                             GestureDetector(
                               onTap: () => controller.addToCart(item),
                               child: Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(6),
                                 child: const Icon(
                                   Icons.add,
-                                  size: 16,
+                                  size: 14,
                                   color: Color(0xFFFF6B35),
                                 ),
                               ),

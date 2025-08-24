@@ -4,6 +4,7 @@ import '../../../data/models/menu_model.dart';
 import '../../../data/models/table_model.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../routes/app_routes.dart';
+import '../../../core/controllers/global_data_controller.dart';
 
 class MenuPageController extends GetxController {
   final MenuRepository _menuRepository = MenuRepository();
@@ -31,10 +32,23 @@ class MenuPageController extends GetxController {
       selectedTable.value = table;
       tableNumber.value = table.tableName;
       print('MenuPageController: Set table number to: ${table.tableName}');
+      
+      // Mark table as occupied when entering menu (booking logic)
+      _markTableAsOccupied(table);
     } else {
       print('MenuPageController: No table argument received, using default table number');
     }
     loadMenuItems();
+  }
+
+  void _markTableAsOccupied(TableModel table) {
+    try {
+      // Notify global controller to refresh tables
+      GlobalDataController.instance.notifyTableUpdate();
+      print('🔄 MenuController: Marked table ${table.tableName} as occupied');
+    } catch (e) {
+      print('🚨 MenuController: Failed to mark table as occupied: $e');
+    }
   }
 
   void loadMenuItems() async {
@@ -140,7 +154,7 @@ class MenuPageController extends GetxController {
     if (result != null && result is Map<String, dynamic>) {
       final customizedItem = result['item'] as MenuModel;
       final quantity = result['quantity'] as int;
-      final customizations = result['customizations'] as List<String>;
+      // final customizations = result['customizations'] as List<String>; // Not used currently
       
       // Add customized item to cart
       if (cartItems.containsKey(customizedItem)) {

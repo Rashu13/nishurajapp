@@ -9,6 +9,7 @@ import '../../../data/models/table_model.dart';
 import '../../../core/utils/session_manager.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/bill_service.dart';
+import '../../../global/widgets/switch_table_modal.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -47,22 +48,22 @@ class HomeView extends GetView<HomeController> {
         ),
         actions: [
           // Debug Session Button
-          IconButton(
-            onPressed: () => _showSessionDebug(context),
-            icon: const Icon(
-              Icons.bug_report,
-              color: Colors.purple,
-            ),
-            tooltip: 'Debug Session Data',
-          ),
-          // Refresh tables button
-          IconButton(
-            onPressed: () => controller.refreshTables(),
-            icon: const Icon(
-              Icons.refresh,
-              color: Color(0xFFFF6B35),
-            ),
-          ),
+          // IconButton(
+          //   onPressed: () => _showSessionDebug(context),
+          //   icon: const Icon(
+          //     Icons.bug_report,
+          //     color: Colors.purple,
+          //   ),
+          //   tooltip: 'Debug Session Data',
+          // ),
+          // // Refresh tables button
+          // IconButton(
+          //   onPressed: () => controller.refreshTables(),
+          //   icon: const Icon(
+          //     Icons.refresh,
+          //     color: Color(0xFFFF6B35),
+          //   ),
+          // ),
           // Analytics/Dashboard button
           IconButton(
             onPressed: () => Get.toNamed(AppRoutes.ANALYTICS),
@@ -170,7 +171,7 @@ class HomeView extends GetView<HomeController> {
                         child: GridView.builder(
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 3,
-                            childAspectRatio: 1,
+                            childAspectRatio: 0.85, // Slightly taller for better content fit
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
                           ),
@@ -210,6 +211,11 @@ class HomeView extends GetView<HomeController> {
           _showTableDialog(tableNumber, table);
         }
       },
+      onLongPress: () {
+        if (isOccupied && table != null) {
+          _showTableOptionsDialog(table);
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
           color: isOccupied ? const Color(0xFFFF6B35) : Colors.grey[100],
@@ -219,16 +225,58 @@ class HomeView extends GetView<HomeController> {
             width: 1,
           ),
         ),
-        child: Center(
-          child: Text(
-            tableNumber,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: isOccupied ? Colors.white : Colors.grey[600],
-            ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Icon(
+                  Icons.table_restaurant,
+                  color: isOccupied ? Colors.white : Colors.grey[600],
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Flexible(
+                child: Text(
+                  tableNumber,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isOccupied ? Colors.white : Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (isOccupied) ...[
+                const SizedBox(height: 2),
+                Flexible(
+                  child: Text(
+                    'Occupied',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white70,
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ] else ...[
+                const SizedBox(height: 2),
+                Flexible(
+                  child: Text(
+                    'Available',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey[500],
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),
@@ -560,6 +608,170 @@ class HomeView extends GetView<HomeController> {
           Text('$userData', style: TextStyle(fontSize: 12)),
         ],
       ),
+    );
+  }
+
+  void _showTableOptionsDialog(TableModel table) {
+    showDialog(
+      context: Get.context!,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF6B35).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.table_restaurant,
+                        color: Color(0xFFFF6B35),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Table ${table.tableName}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Occupied',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(Icons.close, color: Colors.grey[400]),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Options
+                _buildOptionTile(
+                  icon: Icons.restaurant_menu,
+                  title: 'View Menu/Orders',
+                  subtitle: 'See current orders for this table',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    controller.navigateToMenu(table);
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildOptionTile(
+                  icon: Icons.swap_horiz,
+                  title: 'Switch Table',
+                  subtitle: 'Move orders to another table',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _showSwitchTableModal(table);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOptionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[200]!),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(icon, color: const Color(0xFFFF6B35), size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSwitchTableModal(TableModel currentTable) {
+    // Get available tables (not occupied)
+    final availableTables = controller.tables
+        .where((table) => table.status == true && table.tableId != currentTable.tableId)
+        .toList();
+
+    showDialog(
+      context: Get.context!,
+      builder: (BuildContext context) {
+        return SwitchTableModal(
+          currentTableId: currentTable.tableId,
+          currentTableName: currentTable.tableName,
+          availableTables: availableTables,
+          onTableSwitched: (newTable) {
+            // Refresh the tables after switch
+            controller.loadTables();
+          },
+        );
+      },
     );
   }
 }

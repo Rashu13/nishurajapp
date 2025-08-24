@@ -5,6 +5,7 @@ import 'app/routes/app_routes.dart';
 import 'app/routes/app_pages.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/core/controllers/global_data_controller.dart';
+import 'app/data/services/bill_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,9 @@ void main() async {
   
   // Initialize global data controller
   Get.put(GlobalDataController(), permanent: true);
+  
+  // Initialize BillService
+  Get.put(BillService(), permanent: true);
   
   runApp(const MainApp());
 }

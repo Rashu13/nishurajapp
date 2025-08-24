@@ -20,13 +20,26 @@ class AnalyticsApiProvider {
         queryParams['userId'] = userId.toString();
       }
       
+      print('📊 Analytics Summary API Call:');
+      print('🔗 URL: $url');
+      print('📋 Query Params: $queryParams');
+      
       final response = await dio.get(url, queryParameters: queryParams);
       
-      if (response.statusCode == 200 && response.data is Map) {
-        return response.data;
+      print('📥 Response Status: ${response.statusCode}');
+      print('📥 Response Data: ${response.data}');
+      
+      if (response.statusCode == 200) {
+        if (response.data is Map<String, dynamic>) {
+          return response.data;
+        } else {
+          print('⚠️ Warning: Expected Map but got ${response.data.runtimeType}');
+          throw Exception('Invalid response format: Expected object');
+        }
       }
-      throw Exception(ApiErrorHandler.getErrorMessage('Invalid response format', context: 'analytics'));
+      throw Exception('HTTP ${response.statusCode}: ${response.statusMessage}');
     } catch (e) {
+      print('❌ Analytics Summary Error: $e');
       throw Exception(ApiErrorHandler.getErrorMessage(e, context: 'analytics'));
     }
   }
@@ -48,13 +61,26 @@ class AnalyticsApiProvider {
         queryParams['userId'] = userId.toString();
       }
       
+      print('📊 Orders Served API Call:');
+      print('🔗 URL: $url');
+      print('📋 Query Params: $queryParams');
+      
       final response = await dio.get(url, queryParameters: queryParams);
       
-      if (response.statusCode == 200 && response.data is List) {
-        return response.data;
+      print('📥 Response Status: ${response.statusCode}');
+      print('📥 Response Data: ${response.data}');
+      
+      if (response.statusCode == 200) {
+        if (response.data is List) {
+          return response.data;
+        } else {
+          print('⚠️ Warning: Expected List but got ${response.data.runtimeType}');
+          throw Exception('Invalid response format: Expected array');
+        }
       }
-      throw Exception(ApiErrorHandler.getErrorMessage('Invalid response format', context: 'analytics'));
+      throw Exception('HTTP ${response.statusCode}: ${response.statusMessage}');
     } catch (e) {
+      print('❌ Orders Served Error: $e');
       throw Exception(ApiErrorHandler.getErrorMessage(e, context: 'analytics'));
     }
   }

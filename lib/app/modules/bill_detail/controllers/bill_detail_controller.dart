@@ -450,9 +450,10 @@ class BillDetailController extends GetxController {
                   const Text(
                     'KOT - Kitchen Order Ticket',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF2D3142),
+                      overflow: TextOverflow.ellipsis
                     ),
                   ),
                   IconButton(
@@ -778,4 +779,8 @@ class BillDetailController extends GetxController {
     
     return '$shortName$spaces$qtyStr';
   }
+
+  void checkPrinterStatus() {}
+
+  void testPrint() {}
 }

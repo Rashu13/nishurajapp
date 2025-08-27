@@ -80,7 +80,8 @@ class BillService {
           "SessionID": cSession,
           "Status": false,
           "OrderStatus": false,
-          "TableID": tableId
+          "TableID": tableId,
+           // Add PrintStatus field
         });
       }
       
@@ -107,7 +108,8 @@ class BillService {
           "SessionID": cSession,
           "Status": false,
           "RemarksMaster": remarks.isEmpty ? "sample string 3" : remarks,
-          "BillStatus": false
+          "BillStatus": false,
+          // Add PrintStatus field to KOTMaster
         },
         "KOTDetails": kotDetails
       };
@@ -223,11 +225,12 @@ class BillService {
           "TaxAmt": double.parse(itemTaxAmt.toStringAsFixed(2)),
           "NetAmt": double.parse(itemNetAmt.toStringAsFixed(2)),
           "Remarks": customizations.join(', '),
-          "UserID": SessionManager.currentUserId ?? 1, // Use SessionManager for UserID
-          "SessionID": SessionManager.currentCSession ?? 1, // Use CSession from SessionManager
+          "UserID": SessionManager.currentUserId ?? 1,
+          "SessionID": SessionManager.currentCSession ?? 1,
           "Status": true,
           "OrderStatus": true,
-          "TableID": tableId
+          "TableID": tableId,
+      
         }
       };
       
@@ -359,7 +362,8 @@ class BillService {
           "SessionID": SessionManager.currentCSession ?? 1, // Use CSession from SessionManager
           "Status": false,
           "OrderStatus": false,
-          "TableID": tableId
+          "TableID": tableId,
+         // Add PrintStatus field
         });
       }
       
@@ -383,7 +387,8 @@ class BillService {
           "SessionID": SessionManager.currentCSession ?? 1, // Use CSession from SessionManager
           "Status": false,
           "RemarksMaster": remarks.isEmpty ? "" : remarks,
-          "BillStatus": false
+          "BillStatus": false,
+        // Add PrintStatus field to KOTMaster
         },
         "KOTDetails": kotDetails
       };
@@ -528,7 +533,8 @@ class BillService {
           "SessionID": cSession,
           "Status": false,
           "RemarksMaster": "API Test",
-          "BillStatus": false
+          "BillStatus": false,
+          // Add PrintStatus field to KOTMaster
         },
         "KOTDetails": [
           {
@@ -547,7 +553,8 @@ class BillService {
             "SessionID": cSession,
             "Status": true,
             "OrderStatus": true,
-            "TableID": 1
+            "TableID": 1,
+            // Add PrintStatus field
           }
         ]
       };
@@ -656,6 +663,100 @@ class BillService {
               errorDetails = 'Table not found. Please refresh and try again.';
             } else {
               errorDetails = 'Server Error ($statusCode): Unable to switch table.';
+            }
+          }
+        } catch (parseError) {
+          print('🚨 Error parsing DioException: $parseError');
+        }
+      }
+      
+      if (e.toString().contains('SocketException') || e.toString().contains('timeout')) {
+        throw Exception('Network error: Please check your internet connection');
+      } else if (e.toString().contains('session')) {
+        throw Exception('Session expired: Please login again');
+      } else {
+        throw Exception(errorDetails);
+      }
+    }
+  }
+
+  // Update Print Status for KOT
+  Future<Map<String, dynamic>> updateKOTPrintStatus({
+    required int kotNumber,
+    required bool printStatus,
+  }) async {
+    try {
+      print('🖨️ Updating KOT Print Status: KOT $kotNumber -> $printStatus');
+      
+      // Validate session
+      final userId = SessionManager.currentUserId;
+      final cSession = SessionManager.currentCSession;
+      
+      if (userId == null || cSession == null) {
+        throw Exception('Session expired. Please login again.');
+      }
+      
+      final requestData = {
+        'KotNumber': kotNumber,
+        'PrintStatus': printStatus,
+        'UserID': userId,
+        'SessionID': cSession,
+      };
+      
+      print('📤 Sending print status update request: $requestData');
+      
+      final response = await _apiService.post('/api/kot/printstatus', requestData);
+      
+      print('📥 Print Status Update Response: ${response.statusCode}');
+      print('📥 Response Data: ${response.data}');
+      
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        
+        return {
+          'success': true,
+          'message': responseData['Message'] ?? 'Print status updated successfully',
+          'data': responseData
+        };
+      } else {
+        print('❌ Print Status Update Failed: Status ${response.statusCode}');
+        print('❌ Error Details: ${response.data}');
+        
+        String errorMessage = 'Print status update failed';
+        if (response.data != null) {
+          if (response.data is Map && response.data['Message'] != null) {
+            errorMessage = response.data['Message'];
+          } else if (response.data is String) {
+            errorMessage = response.data;
+          }
+        }
+        
+        throw Exception('Print Status Update Error: ${response.statusCode} - $errorMessage');
+      }
+      
+    } catch (e) {
+      print('🚨 Print Status Update Exception: $e');
+      
+      // Parse server error details
+      String errorDetails = e.toString();
+      
+      if (e.toString().contains('DioException')) {
+        try {
+          RegExp statusCodeRegex = RegExp(r'status code of (\d+)');
+          Match? statusMatch = statusCodeRegex.firstMatch(e.toString());
+          
+          if (statusMatch != null) {
+            String statusCode = statusMatch.group(1)!;
+            print('🚨 Server returned error code: $statusCode');
+            
+            if (statusCode == '500') {
+              errorDetails = 'Server Error: Unable to update print status. Please try again.';
+            } else if (statusCode == '400') {
+              errorDetails = 'Bad Request: Invalid print status update request.';
+            } else if (statusCode == '404') {
+              errorDetails = 'KOT not found. Please refresh and try again.';
+            } else {
+              errorDetails = 'Server Error ($statusCode): Unable to update print status.';
             }
           }
         } catch (parseError) {

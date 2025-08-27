@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../bill_detail/controllers/bill_detail_controller.dart' show BillDetailController;
 import '../controllers/bill_detail_controller.dart';
 import 'package:serv/app/global/widgets/loader.dart';
 

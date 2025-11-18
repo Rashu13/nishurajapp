@@ -61,12 +61,41 @@ class BillGenerationController extends GetxController {
   }
 
   List<Bill> get filteredBills {
-    if (searchText.value.isEmpty) {
-      return billsList;
-    }
-    return billsList.where((bill) => 
-      bill.tableNumber.toLowerCase().contains(searchText.value.toLowerCase())
+    // First filter by search text
+    List<Bill> filtered = searchText.value.isEmpty 
+      ? billsList 
+      : billsList.where((bill) => 
+          bill.tableNumber.toLowerCase().contains(searchText.value.toLowerCase())
+        ).toList();
+    
+    // Separate active and completed bills
+    List<Bill> activeBills = filtered.where((bill) => 
+      bill.status.toLowerCase() == 'running' || bill.status.toLowerCase() == 'active'
     ).toList();
+    
+    List<Bill> completedBills = filtered.where((bill) => 
+      bill.status.toLowerCase() == 'completed'
+    ).toList();
+    
+    // Group active bills by table number
+    Map<String, List<Bill>> groupedByTable = {};
+    for (var bill in activeBills) {
+      if (!groupedByTable.containsKey(bill.tableNumber)) {
+        groupedByTable[bill.tableNumber] = [];
+      }
+      groupedByTable[bill.tableNumber]!.add(bill);
+    }
+    
+    // Flatten grouped bills - each table's bills together
+    List<Bill> result = [];
+    groupedByTable.forEach((tableNumber, bills) {
+      result.addAll(bills);
+    });
+    
+    // Add completed bills at the end
+    result.addAll(completedBills);
+    
+    return result;
   }
 
   void selectBill(Bill bill) {

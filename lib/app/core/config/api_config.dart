@@ -2,8 +2,9 @@
 /// This file contains all API endpoints to avoid URL repetition across the project
 class ApiConfig {
   // Base URLs
-  //static const String baseUrl = 'http://192.168.1.6:44351';
-  static const String baseUrl = 'http://192.168.1.114';
+  static const String baseUrl = 'http://192.168.1.238';
+  //static const String baseUrl = 'http://192.168.1.222';
+  
   static const String apiBaseUrl = '$baseUrl/api';
   
   // Authentication

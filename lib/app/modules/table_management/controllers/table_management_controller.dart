@@ -27,7 +27,10 @@ class TableManagementController extends GetxController {
     try {
       ever(GlobalDataController.instance.tableDataUpdated, (_) {
         print('🔄 Table Management: Received table data update notification');
-        loadTables();
+        // Defer the table reload to avoid setState during build
+        Future.delayed(Duration.zero, () {
+          loadTables();
+        });
       });
     } catch (e) {
       print('Global controller not found, continuing without listener');

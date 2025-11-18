@@ -34,7 +34,7 @@ class MenuView extends GetView<MenuPageController> {
         children: [
           // Search bar
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 60),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.grey[100],
@@ -50,7 +50,7 @@ class MenuView extends GetView<MenuPageController> {
                   suffixIcon: Obx(() => controller.searchQuery.value.isNotEmpty
                       ? IconButton(
                           onPressed: controller.clearSearch,
-
+      
                           icon: Icon(Icons.clear, color: Colors.grey[600]),
                         )
                       : const SizedBox.shrink()),
@@ -60,7 +60,7 @@ class MenuView extends GetView<MenuPageController> {
               ),
             ),
           ),
-           const Divider(height: 1),
+          const Divider(height: 1),
           // Table number selector
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -104,97 +104,11 @@ class MenuView extends GetView<MenuPageController> {
             ),
           ),
           
-          // Category tabs
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          //   child: SingleChildScrollView(
-          //     scrollDirection: Axis.horizontal,
-          //     child: Row(
-          //       children: [
-          //         Obx(() => _buildCategoryTab('Bar', controller.selectedCategory.value == 'Bar')),
-          //         const SizedBox(width: 12),
-          //         Obx(() => _buildCategoryTab('Starters', controller.selectedCategory.value == 'Starters')),
-          //         const SizedBox(width: 12),
-          //         Obx(() => _buildCategoryTab('Soup', controller.selectedCategory.value == 'Soup')),
-          //         const SizedBox(width: 12),
-          //         Obx(() => _buildCategoryTab('Bread', controller.selectedCategory.value == 'Bread')),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          
-          // // Veg/Non-veg toggles and filter icons
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              
-          //     children: [
-          //       // Veg toggle
-          //       Row(
-          //         children: [
-          //           Obx(() => Switch(
-          //             value: controller.isVegFilter.value,
-          //             onChanged: controller.toggleVegFilter,
-          //             activeColor: Colors.green,
-          //             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          //           )),
-          //           const Text(
-          //             'Veg',
-          //             style: TextStyle(
-          //               fontSize: 14,
-          //               color: Color(0xFF6C757D),
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-                
-          //       const SizedBox(width: 24),
-                
-          //       // Non-veg toggle
-          //       Row(
-          //         children: [
-          //           Obx(() => Switch(
-          //             value: controller.isNonVegFilter.value,
-          //             onChanged: controller.toggleNonVegFilter,
-          //             activeColor: Colors.red,
-          //             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          //           )),
-          //           const Text(
-          //             'Nonveg',
-          //             style: TextStyle(
-          //               fontSize: 14,
-          //               color: Color(0xFF6C757D),
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-                
-          //       const Spacer(),
-                
-          //       // Filter icons
-                
-          //     ],
-          //   ),
-          // ),
-          
-          
-          SizedBox(height: 5,),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          //         children: [
-          //           _buildFilterIcon(Icons.set_meal, 'Fish'),
-          //           const SizedBox(width: 12),
-          //           _buildFilterIcon(Icons.local_dining, 'Chicken'),
-          //           const SizedBox(width: 12),
-          //           _buildFilterIcon(Icons.restaurant, 'Mutton'),
-          //           const SizedBox(width: 12),
-          //           _buildFilterIcon(Icons.eco, 'Eggs'),
-          //         ],
-          //       ),
-          // Menu items list
-          SizedBox(height: 5,),
+          const SizedBox(height: 5),
           const Divider(height: 1),
+          const SizedBox(height: 5),
+          
+          // Menu items list - Fixed: Use Expanded here instead of in SingleChildScrollView
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
@@ -249,7 +163,7 @@ class MenuView extends GetView<MenuPageController> {
         if (controller.cartItems.isEmpty) return const SizedBox.shrink();
         
         return Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 60),
           decoration: const BoxDecoration(
             color: Colors.white,
             boxShadow: [
@@ -289,7 +203,7 @@ class MenuView extends GetView<MenuPageController> {
                 onPressed: controller.proceedToOrder,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF6B35),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 30),
                 ),
                 child: const Text(
                   'View Cart',
@@ -300,56 +214,6 @@ class MenuView extends GetView<MenuPageController> {
           ),
         );
       }),
-    );
-  }
-
-  Widget _buildCategoryTab(String title, bool isActive) {
-    return GestureDetector(
-      onTap: () => controller.selectCategory(title),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: isActive ? const Color(0xFFFF6B35) : Colors.grey[100],
-          borderRadius: BorderRadius.circular(25),
-        ),
-        child: Text(
-          title,
-          style: TextStyle(
-            color: isActive ? Colors.white : const Color(0xFF6C757D),
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterIcon(IconData icon, String label) {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: const Color(0xFF6C757D),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 10,
-              color: Color(0xFF6C757D),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

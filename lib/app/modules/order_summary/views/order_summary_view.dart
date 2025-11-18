@@ -137,7 +137,7 @@ class OrderSummaryView extends GetView<OrderSummaryController> {
         ],
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 50),
         decoration: const BoxDecoration(
           color: Colors.white,
           boxShadow: [

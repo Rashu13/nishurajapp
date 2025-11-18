@@ -7,6 +7,8 @@ import '../../../routes/app_routes.dart';
 import '../../../core/controllers/global_data_controller.dart';
 import '../../../core/utils/toast_helper.dart';
 
+enum RoomTypeFilter { restaurant, ncBilling, rest }
+
 class HomeController extends GetxController {
   final MenuRepository _menuRepository = MenuRepository();
   late final TableRepository _tableRepository;
@@ -19,6 +21,7 @@ class HomeController extends GetxController {
   var categories = <String>['All', 'Starter', 'Main Course', 'Dessert', 'Drinks'].obs;
   var guestCount = 4.obs;
   var selectedTable = Rxn<TableModel>();
+  var selectedRoomFilter = RoomTypeFilter.restaurant.obs;
 
   @override
   void onInit() {
@@ -31,7 +34,10 @@ class HomeController extends GetxController {
     try {
       ever(GlobalDataController.instance.tableDataUpdated, (_) {
         print('🔄 Home Controller: Received table data update notification');
-        loadTables();
+        // Defer the table reload to avoid setState during build
+        Future.delayed(Duration.zero, () {
+          loadTables();
+        });
       });
     } catch (e) {
       print('Global controller not found, continuing without listener');
@@ -82,8 +88,23 @@ class HomeController extends GetxController {
     loadTables();
   }
 
+  List<TableModel> get filteredTables {
+    switch (selectedRoomFilter.value) {
+      case RoomTypeFilter.restaurant:
+        return tables.where((table) => table.roomTypeId == 1).toList();
+      case RoomTypeFilter.ncBilling:
+        return tables.where((table) => table.roomTypeId == 2).toList();
+      case RoomTypeFilter.rest:
+        return tables.where((table) => table.roomTypeId != 1 && table.roomTypeId != 2).toList();
+    }
+  }
+
+  void selectRoomFilter(RoomTypeFilter filter) {
+    selectedRoomFilter.value = filter;
+  }
+
   void incrementGuest() {
-    if (guestCount.value < 12) {
+    if (guestCount.value < 60) {
       guestCount.value++;
     }
   }
@@ -105,15 +126,34 @@ class HomeController extends GetxController {
     selectedCategory.value = category;
   }
 
-  void navigateToMenu([TableModel? table]) {
-    if (table != null) {
-      selectedTable.value = table;
-      print('HomeController: Navigating to menu with table: ${table.tableName}');
-    } else {
-      print('HomeController: Navigating to menu without table argument');
-    }
-    Get.toNamed(AppRoutes.MENU, arguments: selectedTable.value);
+  // void navigateToMenu([TableModel? table]) {
+  //   if (table != null) {
+  //     selectedTable.value = table;
+  //     print('HomeController: Navigating to menu with table: ${table.tableName}');
+  //   } else {
+  //     print('HomeController: Navigating to menu without table argument');
+  //   }
+  //   Get.toNamed(AppRoutes.MENU, arguments: {
+  //     'table': table,
+  //     'guestCount': guestCount.value,
+  //   });
+    
+  // }
+  // Update navigateToMenu method to pass guest count
+void navigateToMenu([TableModel? table]) {
+  if (table != null) {
+    // Pass guest count to menu controller
+    Get.toNamed(AppRoutes.MENU, arguments: {
+      'table': table,
+      'guestCount': guestCount.value, // Pass current guest count
+    });
+  } else {
+    // For new table selection, pass guest count
+    Get.toNamed(AppRoutes.MENU, arguments: {
+      'guestCount': guestCount.value,
+    });
   }
+}
 
   void navigateToMenuItem(MenuModel item) {
     Get.toNamed(AppRoutes.MENU_DETAIL, arguments: item);

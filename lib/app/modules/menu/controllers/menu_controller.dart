@@ -19,6 +19,7 @@ class MenuPageController extends GetxController {
   var selectedTable = Rxn<TableModel>();
   var searchQuery = ''.obs;
   var allMenuItems = <MenuModel>[].obs;
+  final guestCount = 1.obs;
 
   final List<String> categories = ['Bar', 'Starters', 'Soup', 'Bread'];
 
@@ -26,7 +27,9 @@ class MenuPageController extends GetxController {
   void onInit() {
     super.onInit();
     // Get table from arguments if passed
-    final TableModel? table = Get.arguments as TableModel?;
+    final args = Get.arguments;
+    final TableModel? table = args['table'] as TableModel?;
+    guestCount.value = args['guestCount'] as int? ?? 1;
     print('MenuPageController: Received table argument: $table');
     if (table != null) {
       selectedTable.value = table;
@@ -174,24 +177,25 @@ class MenuPageController extends GetxController {
   }
 
   void proceedToOrder() {
-    if (cartItems.isNotEmpty) {
-      // Convert cart items to order format
-      List<Map<String, dynamic>> orderItems = cartItems.entries.map((entry) {
-        return {
-          'item': entry.key,
-          'quantity': entry.value,
-          'customizations': <String>[], // Empty for now, can be extended
-        };
-      }).toList();
-      
-      // Navigate to order summary
-      Get.toNamed(AppRoutes.ORDER_SUMMARY, arguments: {
-        'items': orderItems,
-        'tableNumber': tableNumber.value,
-        'selectedTable': selectedTable.value,
-      });
-    }
+  if (cartItems.isNotEmpty) {
+    // Convert cart items to order format
+    List<Map<String, dynamic>> orderItems = cartItems.entries.map((entry) {
+      return {
+        'item': entry.key,
+        'quantity': entry.value,
+        'customizations': <String>[], // Empty for now, can be extended
+      };
+    }).toList();
+    
+    // Navigate to order summary with guest count
+    Get.toNamed(AppRoutes.ORDER_SUMMARY, arguments: {
+      'items': orderItems,
+      'tableNumber': tableNumber.value,
+      'selectedTable': selectedTable.value,
+      'guestCount': guestCount.value, // Add guest count to arguments
+    });
   }
+}
 
   void proceedToOrderOld() {
     if (cartItems.isNotEmpty) {

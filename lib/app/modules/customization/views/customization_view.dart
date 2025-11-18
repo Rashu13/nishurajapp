@@ -30,7 +30,7 @@ class CustomizationView extends GetView<CustomizationController> {
         children: [
           // Search bar
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: TextField(
               onChanged: controller.updateSearchText,
               decoration: InputDecoration(
@@ -85,7 +85,7 @@ class CustomizationView extends GetView<CustomizationController> {
         ],
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 60),
         decoration: const BoxDecoration(
           color: Colors.white,
           boxShadow: [

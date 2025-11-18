@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../data/models/menu_model.dart';
 import '../../../data/services/bill_service.dart';
 import '../../../data/models/table_model.dart';
+import '../../../data/repositories/table_repository.dart';
 import '../../../core/utils/toast_helper.dart';
 import '../../../core/controllers/global_data_controller.dart';
 
@@ -69,9 +70,17 @@ class OrderSummaryController extends GetxController {
       // Get table ID from selected table or parse from table number
       int tableId = selectedTable.value?.tableId ?? 1;
       
-      print('Sending order to kitchen for Table ID: $tableId');
-      print('Number of items: ${orderItems.length}');
-      print('Remarks: ${remarkText.value}');
+      print('======= SEND TO KITCHEN DEBUG START =======');
+      print('🏓 Table ID: $tableId');
+      print('📋 Number of items: ${orderItems.length}');
+      print('📝 Remarks: ${remarkText.value}');
+      print('🍽️ Order Items Details:');
+      for (var item in orderItems) {
+        print('  - Item: ${(item['item'] as MenuModel).itemName}, Qty: ${item['quantity']}');
+      }
+      print('🔍 Selected Table Object: ${selectedTable.value?.toJson()}');
+      print('🔍 Table Status BEFORE sending: ${selectedTable.value?.status}');
+      print('======= CALLING sendBillToKitchen() =======');
       
       // Send bill to kitchen via API
       final result = await _billService.sendBillToKitchen(
@@ -80,9 +89,21 @@ class OrderSummaryController extends GetxController {
         remarks: remarkText.value,
       );
       
+      print('======= RESPONSE RECEIVED =======');
+      print('✅ Result: $result');
+      
       isLoading.value = false;
       
       print('Kitchen order result: $result');
+      
+      // Update table status to occupied (false) after successful KOT
+      try {
+        final tableRepository = Get.find<TableRepository>();
+        await tableRepository.updateTableStatus(tableId, false);
+        print('✅ Table $tableId status updated to occupied');
+      } catch (e) {
+        print('⚠️ Failed to update table status: $e');
+      }
       
       // Refresh tables globally after successful KOT
       try {

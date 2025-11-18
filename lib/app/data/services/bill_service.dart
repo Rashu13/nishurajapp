@@ -10,6 +10,7 @@ class BillService {
     required int tableId,
     required List<Map<String, dynamic>> orderItems,
     required String remarks,
+    int paxNo = 1,
   }) async {
     try {
       // Validation checks
@@ -81,7 +82,6 @@ class BillService {
           "Status": false,
           "OrderStatus": false,
           "TableID": tableId,
-           // Add PrintStatus field
         });
       }
       
@@ -96,7 +96,7 @@ class BillService {
           "KotNumber": kotNumber,
           "OrderNo": orderNo,
           "TableID": tableId,
-          "PaxNo": 1,
+          "PaxNo": paxNo,
           "Date": DateTime.now().toIso8601String(),
           "Time": "sample string 2",
           "StewardID": 1,
@@ -107,9 +107,9 @@ class BillService {
           "UserID": userId,
           "SessionID": cSession,
           "Status": false,
-          "RemarksMaster": remarks.isEmpty ? "sample string 3" : remarks,
+          "RemarksMaster": remarks.isEmpty ? "App" : remarks,
           "BillStatus": false,
-          // Add PrintStatus field to KOTMaster
+          "PrintStatus": false,
         },
         "KOTDetails": kotDetails
       };
@@ -122,6 +122,8 @@ class BillService {
       
       print('📥 KOT Response Status: ${response.statusCode}');
       print('📄 KOT Response Data: ${response.data}');
+      print('📄 KOT Response Body (Full): ${response.toString()}');
+      print('📄 KOT Response Headers: ${response.headers}');
       
       if (response.statusCode == 200) {
         final responseData = response.data;
@@ -224,17 +226,20 @@ class BillService {
           "GST": double.parse(itemGst.toStringAsFixed(2)),
           "TaxAmt": double.parse(itemTaxAmt.toStringAsFixed(2)),
           "NetAmt": double.parse(itemNetAmt.toStringAsFixed(2)),
-          "Remarks": customizations.join(', '),
+          "Remarks": "APP",
           "UserID": SessionManager.currentUserId ?? 1,
-          "SessionID": SessionManager.currentCSession ?? 1,
-          "Status": true,
-          "OrderStatus": true,
+          "SessionID": SessionManager.currentCSession ?? 3,
+          "Status": false,
+          "OrderStatus": false,
           "TableID": tableId,
       
         }
       };
       
       final response = await _apiService.post('/api/kot/item', kotItemRequest);
+      print('📥 Add Item Response Status: ${response.statusCode}');
+      print('📄 Add Item Response Data: ${response.data}');
+      print('📄 Add Item Response Body (Full): ${response.toString()}');
       if (response.statusCode != 200) {
         throw Exception('Failed to add item to KOT');
       }
@@ -359,11 +364,10 @@ class BillService {
           "NetAmt": double.parse(itemNetAmt.toStringAsFixed(2)),
           "Remarks": customizations.isEmpty ? "" : customizations.join(', '),
           "UserID": SessionManager.currentUserId ?? 1, // Use SessionManager for UserID
-          "SessionID": SessionManager.currentCSession ?? 1, // Use CSession from SessionManager
+          "SessionID": SessionManager.currentCSession ?? 3, // Use CSession from SessionManager
           "Status": false,
           "OrderStatus": false,
           "TableID": tableId,
-         // Add PrintStatus field
         });
       }
       
@@ -384,20 +388,36 @@ class BillService {
           "TaxAmt": totalTaxAmt, // sum of all items TaxAmt
           "TotalAmt": totalAmt,
           "UserID": SessionManager.currentUserId ?? 1, // Use SessionManager for UserID
-          "SessionID": SessionManager.currentCSession ?? 1, // Use CSession from SessionManager
+          "SessionID": SessionManager.currentCSession ?? 3, // Use CSession from SessionManager
           "Status": false,
           "RemarksMaster": remarks.isEmpty ? "" : remarks,
           "BillStatus": false,
-        // Add PrintStatus field to KOTMaster
+          "PrintStatus": false,
         },
         "KOTDetails": kotDetails
       };
       
+      print('');
+      print('========================================');
+      print('📤 FULL REQUEST BODY TO /api/kot');
+      print('========================================');
+      print('TableID: ${kotRequest['KOTMaster']['TableID']}');
+      print('Status: ${kotRequest['KOTMaster']['Status']}');
+      print('BillStatus: ${kotRequest['KOTMaster']['BillStatus']}');
+      print('PrintStatus: ${kotRequest['KOTMaster']['PrintStatus']}');
+      print('');
+      print('Full JSON Body:');
+      print(kotRequest.toString());
+      print('========================================');
+      print('');
+      
       // Send to KOT API
-      print('Sending Order via KOT API: ${kotRequest.toString()}');
+      print('📤 Sending Order via KOT API to /api/kot');
       final response = await _apiService.post('/api/kot', kotRequest);
       print('KOT Response Status: ${response.statusCode}');
       print('KOT Response Data: ${response.data}');
+      print('📄 KOT Response Body (Full): ${response.toString()}');
+      print('📄 KOT Response Headers: ${response.headers}');
       
       if (response.statusCode != 200) {
         throw Exception('Failed to send order to kitchen: ${response.statusCode} - ${response.data}');
@@ -438,10 +458,11 @@ class BillService {
           "TaxAmt": 1.1,
           "TotalAmt": 1.1,
           "UserID": SessionManager.currentUserId ?? 1,
-          "SessionID": SessionManager.currentCSession ?? 1,
+          "SessionID": SessionManager.currentCSession ?? 3,
           "Status": false,
           "RemarksMaster": "sample string 3",
-          "BillStatus": false
+          "BillStatus": false,
+          "PrintStatus": false
         },
         "KOTDetails": [
           {
@@ -457,9 +478,9 @@ class BillService {
             "NetAmt": 1.1,
             "Remarks": "sample string 2",
             "UserID": SessionManager.currentUserId ?? 1,
-            "SessionID": SessionManager.currentCSession ?? 1,
-            "Status": true,
-            "OrderStatus": true,
+            "SessionID": SessionManager.currentCSession ?? 3,
+            "Status": false,
+            "OrderStatus": false,
             "TableID": 1
           },
           {
@@ -475,9 +496,9 @@ class BillService {
             "NetAmt": 1.1,
             "Remarks": "sample string 2",
             "UserID": SessionManager.currentUserId ?? 1,
-            "SessionID": SessionManager.currentCSession ?? 1,
-            "Status": true,
-            "OrderStatus": true,
+            "SessionID": SessionManager.currentCSession ?? 3,
+            "Status": false,
+            "OrderStatus": false,
             "TableID": 1
           }
         ]
@@ -534,7 +555,7 @@ class BillService {
           "Status": false,
           "RemarksMaster": "API Test",
           "BillStatus": false,
-          // Add PrintStatus field to KOTMaster
+          "PrintStatus": false,
         },
         "KOTDetails": [
           {
@@ -551,10 +572,9 @@ class BillService {
             "Remarks": "test item",
             "UserID": userId,
             "SessionID": cSession,
-            "Status": true,
-            "OrderStatus": true,
+            "Status": false,
+            "OrderStatus": false,
             "TableID": 1,
-            // Add PrintStatus field
           }
         ]
       };

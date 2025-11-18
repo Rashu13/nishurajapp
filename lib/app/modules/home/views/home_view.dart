@@ -124,6 +124,51 @@ class HomeView extends GetView<HomeController> {
               ),
             ),
             
+
+            const SizedBox(height: 16),
+
+            Obx(() {
+              final selectedFilter = controller.selectedRoomFilter.value;
+              return Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Restaurant'),
+                    selected: selectedFilter == RoomTypeFilter.restaurant,
+                    onSelected: (_) => controller.selectRoomFilter(RoomTypeFilter.restaurant),
+                    selectedColor: const Color(0xFFFF6B35),
+                    labelStyle: TextStyle(
+                      color: selectedFilter == RoomTypeFilter.restaurant ? Colors.white : const Color(0xFF2D3142),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    backgroundColor: Colors.grey[200],
+                  ),
+                  ChoiceChip(
+                    label: const Text('NC Billing'),
+                    selected: selectedFilter == RoomTypeFilter.ncBilling,
+                    onSelected: (_) => controller.selectRoomFilter(RoomTypeFilter.ncBilling),
+                    selectedColor: const Color(0xFFFF6B35),
+                    labelStyle: TextStyle(
+                      color: selectedFilter == RoomTypeFilter.ncBilling ? Colors.white : const Color(0xFF2D3142),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    backgroundColor: Colors.grey[200],
+                  ),
+                  ChoiceChip(
+                    label: const Text('Rest of Rooms'),
+                    selected: selectedFilter == RoomTypeFilter.rest,
+                    onSelected: (_) => controller.selectRoomFilter(RoomTypeFilter.rest),
+                    selectedColor: const Color(0xFFFF6B35),
+                    labelStyle: TextStyle(
+                      color: selectedFilter == RoomTypeFilter.rest ? Colors.white : const Color(0xFF2D3142),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    backgroundColor: Colors.grey[200],
+                  ),
+                ],
+              );
+            }),
+
             const SizedBox(height: 16),
             
             Expanded(
@@ -150,8 +195,8 @@ class HomeView extends GetView<HomeController> {
                     );
                   }
                   
-                  // Display all available tables for home view
-                  final displayTables = controller.tables;
+                  // Display tables based on selected room type filter
+                  final displayTables = controller.filteredTables;
                   
                   return Column(
                     children: [
@@ -168,20 +213,30 @@ class HomeView extends GetView<HomeController> {
                       ),
                       
                       Expanded(
-                        child: GridView.builder(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            childAspectRatio: 0.85, // Slightly taller for better content fit
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                          itemCount: displayTables.length,
-                          itemBuilder: (context, index) {
-                            final table = displayTables[index];
-                            // Show table name instead of numbers, and use actual status
-                            return _buildTableCard(table.tableName, !table.status, table);
-                          },
-                        ),
+                        child: displayTables.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No tables for selected room type',
+                                  style: TextStyle(
+                                    color: Color(0xFF6C757D),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              )
+                            : GridView.builder(
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  childAspectRatio: 0.85, // Slightly taller for better content fit
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                ),
+                                itemCount: displayTables.length,
+                                itemBuilder: (context, index) {
+                                  final table = displayTables[index];
+                                  // Show table name instead of numbers, and use actual status
+                                  return _buildTableCard(table.tableName, !table.status, table);
+                                },
+                              ),
                       ),
                     ],
                   );

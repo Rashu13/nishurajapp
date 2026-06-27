@@ -1,8 +1,12 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import '../../../data/models/menu_model.dart';
 
 class CustomizationController extends GetxController {
   final MenuModel menuItem = Get.arguments as MenuModel;
+  
+  // Text controller for custom customization
+  late TextEditingController customTextController;
   
   // Customization options
 var customizations = <String, bool>{
@@ -74,6 +78,18 @@ var customizations = <String, bool>{
   var searchText = ''.obs;
   var quantity = 1.obs;
   
+  @override
+  void onInit() {
+    super.onInit();
+    customTextController = TextEditingController();
+  }
+  
+  @override
+  void onClose() {
+    customTextController.dispose();
+    super.onClose();
+  }
+  
   void toggleCustomization(String key) {
     customizations[key] = !customizations[key]!;
   }
@@ -107,6 +123,12 @@ var customizations = <String, bool>{
         .where((entry) => entry.value)
         .map((entry) => entry.key)
         .toList();
+    
+    // Add custom text if provided
+    String customText = customTextController.text.trim();
+    if (customText.isNotEmpty) {
+      selectedCustomizations.add(customText);
+    }
     
     // Return to menu with customizations
     Get.back(result: {

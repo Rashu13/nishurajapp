@@ -30,6 +30,8 @@ import '../modules/profile/views/profile_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/analytics/views/analytics_view.dart';
 import '../modules/analytics/bindings/analytics_binding.dart';
+import '../modules/settings/views/settings_view.dart';
+import '../modules/settings/controllers/settings_controller.dart';
 
 import 'app_routes.dart';
 
@@ -122,6 +124,13 @@ class AppPages {
       name: AppRoutes.ANALYTICS,
       page: () => const AnalyticsView(),
       binding: AnalyticsBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.SETTINGS,
+      page: () => const SettingsView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<SettingsController>(() => SettingsController());
+      }),
     ),
   ];
 }

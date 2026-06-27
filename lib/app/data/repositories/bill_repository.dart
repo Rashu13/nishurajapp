@@ -20,6 +20,33 @@ class BillRepository {
       String orderId = 'KOT${map['KOTNumber']}'; // Short order ID
       String status = map['Status']?.toString() ?? 'Completed'; // Use backend status directly
       
+      // Parse BillType from string to int
+      int billType = 1; // Default to Restaurant
+      final billTypeRaw = map['BillType'] ?? map['OrderType'];
+      if (billTypeRaw != null) {
+        if (billTypeRaw is int) {
+          billType = billTypeRaw;
+        } else if (billTypeRaw is String) {
+          switch (billTypeRaw.toLowerCase().trim()) {
+            case 'restaurant':
+              billType = 1;
+              break;
+            case 'nc billing':
+            case 'ncbilling':
+              billType = 2;
+              break;
+            case 'room':
+              billType = 3;
+              break;
+            default:
+              billType = int.tryParse(billTypeRaw) ?? 1;
+          }
+        }
+      }
+      
+      // Parse BillDate
+      DateTime billDate = DateTime.tryParse(map['BillDate']?.toString() ?? '') ?? DateTime.now();
+      
       return Bill(
         id: billId,
         tableNumber: map['TableName']?.toString() ?? '',
@@ -31,7 +58,9 @@ class BillRepository {
         itemsTotal: (map['GrossAmount'] as num?)?.toDouble() ?? 0.0,
         gst: ((map['TotalAmount'] as num?)?.toDouble() ?? 0.0) - ((map['GrossAmount'] as num?)?.toDouble() ?? 0.0),
         total: (map['TotalAmount'] as num?)?.toDouble() ?? 0.0,
-        createdAt: DateTime.tryParse(map['BillDate']?.toString() ?? '') ?? DateTime.now(),
+        createdAt: billDate,
+        billDate: billDate,
+        billType: billType,
         status: status, // Use status from backend as-is
       );
     }).toList();

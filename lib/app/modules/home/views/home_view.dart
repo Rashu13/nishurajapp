@@ -64,6 +64,14 @@ class HomeView extends GetView<HomeController> {
           //     color: Color(0xFFFF6B35),
           //   ),
           // ),
+          // Settings button
+          IconButton(
+            onPressed: () => Get.toNamed(AppRoutes.SETTINGS),
+            icon: const Icon(
+              Icons.settings,
+              color: Color(0xFFFF6B35),
+            ),
+          ),
           // Analytics/Dashboard button
           IconButton(
             onPressed: () => Get.toNamed(AppRoutes.ANALYTICS),

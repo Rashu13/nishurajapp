@@ -259,14 +259,41 @@ class OrderSummaryView extends GetView<OrderSummaryController> {
           
           const SizedBox(height: 8),
           
-          Text(
-            '₹ ${((double.tryParse(item.restrorate) ?? 0.0) * quantity).toStringAsFixed(2)}',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3142),
-            ),
-          ),
+          // Price display with discount info
+          Obx(() {
+            final rate = double.tryParse(item.restrorate) ?? 0.0;
+            final billType = controller.selectedTable.value?.roomTypeId ?? 1;
+            final isNCBilling = billType == 2;
+            final discountedRate = isNCBilling ? rate * 0.35 : rate;
+            final originalTotal = rate * quantity;
+            final discountedTotal = discountedRate * quantity;
+            
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isNCBilling) ...[
+                  Text(
+                    '₹ ${originalTotal.toStringAsFixed(2)} → ${discountedTotal.toStringAsFixed(2)} (65% OFF)',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red[600],
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                ] else ...[
+                  Text(
+                    '₹ ${originalTotal.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D3142),
+                    ),
+                  ),
+                ],
+              ],
+            );
+          }),
         ],
       ),
     );

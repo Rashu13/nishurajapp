@@ -41,9 +41,28 @@ class BillGenerationView extends GetView<BillGenerationController> {
       bottomNavigationBar: CommonBottomNavigationBar(currentIndex: 2),
       body: Column(
         children: [
+          // Bill Type filter chips
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip('All', 'all'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Restaurant', 'restaurant'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('NC Billing', 'ncBilling'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Room', 'room'),
+                ],
+              ),
+            ),
+          ),
+          
           // Search bar
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
               onChanged: controller.updateSearchText,
               decoration: InputDecoration(
@@ -68,14 +87,118 @@ class BillGenerationView extends GetView<BillGenerationController> {
                 return const Center(child: LoaderCircle());
               }
               
+              // Trigger rebuild when filter changes
+              controller.selectedBillTypeFilter.value;
+              controller.searchText.value;
+              
+              final bills = controller.filteredBills;
+              
+              if (bills.isEmpty) {
+                return RefreshIndicator(
+                  onRefresh: () => controller.loadBills(),
+                  child: ListView(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inbox_outlined,
+                              size: 48,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No Active Bills',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'All bills are completed',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              
+              // Group bills by table name
+              Map<String, List<Bill>> groupedBills = {};
+              for (var bill in bills) {
+                if (!groupedBills.containsKey(bill.tableNumber)) {
+                  groupedBills[bill.tableNumber] = [];
+                }
+                groupedBills[bill.tableNumber]!.add(bill);
+              }
+              
               return RefreshIndicator(
                 onRefresh: () => controller.loadBills(),
                 child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: controller.filteredBills.length,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  itemCount: groupedBills.length,
                   itemBuilder: (context, index) {
-                    final bill = controller.filteredBills[index];
-                    return _buildBillCard(bill);
+                    final tableNumber = groupedBills.keys.elementAt(index);
+                    final tableBills = groupedBills[tableNumber]!;
+                    
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Table header
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12, bottom: 12, left: 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.table_restaurant,
+                                size: 18,
+                                color: const Color(0xFFFF6B35),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Table $tableNumber',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2D3142),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFF6B35).withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${tableBills.length} order${tableBills.length > 1 ? 's' : ''}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFFFF6B35),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Bills for this table
+                        ...tableBills.map((bill) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildBillCard(bill),
+                        )),
+                      ],
+                    );
                   },
                 ),
               );
@@ -86,9 +209,37 @@ class BillGenerationView extends GetView<BillGenerationController> {
     );
   }
 
+  Widget _buildFilterChip(String label, String value) {
+    return Obx(() {
+      final isSelected = controller.selectedBillTypeFilter.value == value;
+      return GestureDetector(
+        onTap: () => controller.selectBillTypeFilter(value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFFFF6B35) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected ? const Color(0xFFFF6B35) : Colors.grey[300]!,
+              width: 1.5,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : const Color(0xFF2D3142),
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
   Widget _buildBillCard(Bill bill) {
     // Debug: Print bill status to console
-    print('🏷️ Building card for Table ${bill.tableNumber}: status="${bill.status}"');
+    print('🏷️ Building card for Table ${bill.tableNumber}: billStatus=${bill.billStatus}, orderId=${bill.orderId}');
     
     final bool isCompleted = bill.status.toLowerCase() == 'completed';
     final bool isRunning = bill.status.toLowerCase() == 'running';

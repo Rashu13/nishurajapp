@@ -17,4 +17,5 @@ class AppRoutes {
   static const String PAYMENT_SUCCESSFUL = '/payment_successful';
   static const String PROFILE = '/profile';
   static const String ANALYTICS = '/analytics';
+  static const String SETTINGS = '/settings';
 }

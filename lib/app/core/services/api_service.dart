@@ -17,8 +17,8 @@ class ApiService {
 
     // Add interceptors for logging (only technical details, not exposed to users)
     _dio.interceptors.add(LogInterceptor(
-      requestBody: false, // Don't log request body in production
-      responseBody: false, // Don't log response body in production
+      requestBody: true, // Enable to see request body for debugging
+      responseBody: true, // Enable to see response body for debugging
       logPrint: (obj) {
         // Custom log function that doesn't expose sensitive data
         print('🔧 API Call: ${obj.toString().replaceAll(RegExp(r'http://[^/]+'), '[SERVER]')}');
@@ -65,13 +65,30 @@ class ApiService {
   Exception _handleError(dynamic error) {
     // Don't expose technical details to users
     if (error is DioException) {
+      // Log detailed error for debugging
+      print('🚨 DioException Details:');
+      print('  Type: ${error.type}');
+      print('  Status Code: ${error.response?.statusCode}');
+      print('  Response Data: ${error.response?.data}');
+      print('  Response Headers: ${error.response?.headers}');
+      print('  Message: ${error.message}');
+      
       switch (error.type) {
         case DioExceptionType.connectionTimeout:
         case DioExceptionType.receiveTimeout:
         case DioExceptionType.sendTimeout:
           return Exception('Network timeout. Please check your connection.');
         case DioExceptionType.badResponse:
-          return Exception('Server error. Please try again later.');
+          // Include server error message if available
+          String serverMessage = 'Server error. Please try again later.';
+          if (error.response?.data != null) {
+            if (error.response!.data is String) {
+              serverMessage = 'Server Error: ${error.response!.data}';
+            } else if (error.response!.data is Map && error.response!.data['Message'] != null) {
+              serverMessage = 'Server Error: ${error.response!.data['Message']}';
+            }
+          }
+          return Exception('${serverMessage} (Status: ${error.response?.statusCode})');
         case DioExceptionType.cancel:
           return Exception('Request was cancelled.');
         case DioExceptionType.connectionError:

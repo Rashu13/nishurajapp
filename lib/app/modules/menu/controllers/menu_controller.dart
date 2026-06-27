@@ -8,10 +8,12 @@ import '../../../core/controllers/global_data_controller.dart';
 
 class MenuPageController extends GetxController {
   final MenuRepository _menuRepository = MenuRepository();
+  late TextEditingController searchController;
   
   var isLoading = false.obs;
   var menuItems = <MenuModel>[].obs;
   var cartItems = <MenuModel, int>{}.obs;
+  var cartItemCustomizations = <MenuModel, List<String>>{}.obs; // Store customizations per item
   var selectedCategory = 'Starters'.obs;
   var isVegFilter = true.obs;
   var isNonVegFilter = false.obs;
@@ -26,6 +28,7 @@ class MenuPageController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    searchController = TextEditingController();
     // Get table from arguments if passed
     final args = Get.arguments;
     final TableModel? table = args['table'] as TableModel?;
@@ -42,6 +45,12 @@ class MenuPageController extends GetxController {
       print('MenuPageController: No table argument received, using default table number');
     }
     loadMenuItems();
+  }
+
+  @override
+  void onClose() {
+    searchController.dispose();
+    super.onClose();
   }
 
   void _markTableAsOccupied(TableModel table) {
@@ -91,6 +100,7 @@ class MenuPageController extends GetxController {
 
   void clearSearch() {
     searchQuery.value = '';
+    searchController.clear();
     filterMenuItems();
   }
 
@@ -157,7 +167,7 @@ class MenuPageController extends GetxController {
     if (result != null && result is Map<String, dynamic>) {
       final customizedItem = result['item'] as MenuModel;
       final quantity = result['quantity'] as int;
-      // final customizations = result['customizations'] as List<String>; // Not used currently
+      final customizations = result['customizations'] as List<String>;
       
       // Add customized item to cart
       if (cartItems.containsKey(customizedItem)) {
@@ -165,14 +175,11 @@ class MenuPageController extends GetxController {
       } else {
         cartItems[customizedItem] = quantity;
       }
-      cartItems.refresh();
       
-      // Get.snackbar(
-      //   'Added to Cart',
-      //   '${customizedItem.itemName} with customizations added to cart',
-      //   duration: const Duration(seconds: 1),
-      //   snackPosition: SnackPosition.BOTTOM,
-      // );
+      // Save customizations for this item
+      cartItemCustomizations[customizedItem] = customizations;
+      
+      cartItems.refresh();
     }
   }
 
@@ -183,7 +190,7 @@ class MenuPageController extends GetxController {
       return {
         'item': entry.key,
         'quantity': entry.value,
-        'customizations': <String>[], // Empty for now, can be extended
+        'customizations': cartItemCustomizations[entry.key] ?? <String>[], // Include saved customizations
       };
     }).toList();
     

@@ -33,9 +33,28 @@ class OrderStatusView extends GetView<OrderStatusController> {
       ),
       body: Column(
         children: [
+          // Room type filter chips
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip('All', 'all'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Restaurant', 'restaurant'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('NC Billing', 'ncBilling'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Room', 'room'),
+                ],
+              ),
+            ),
+          ),
+          
           // Search bar
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -54,12 +73,18 @@ class OrderStatusView extends GetView<OrderStatusController> {
             ),
           ),
           
+          const SizedBox(height: 16),
+          
           // Order statuses list
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
                 return const Center(child: LoaderCircle());
               }
+              
+              // Trigger rebuild when filter changes
+              controller.selectedRoomFilter.value;
+              controller.searchQuery.value;
               
               final filteredStatuses = controller.filteredOrderStatuses;
               
@@ -89,6 +114,34 @@ class OrderStatusView extends GetView<OrderStatusController> {
       ),
       bottomNavigationBar: CommonBottomNavigationBar(currentIndex: 3),
     );
+  }
+
+  Widget _buildFilterChip(String label, String value) {
+    return Obx(() {
+      final isSelected = controller.selectedRoomFilter.value == value;
+      return GestureDetector(
+        onTap: () => controller.selectRoomFilter(value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFFFF6B35) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected ? const Color(0xFFFF6B35) : Colors.grey[300]!,
+              width: 1.5,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : const Color(0xFF2D3142),
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      );
+    });
   }
 
   Widget _buildOrderStatusCard(OrderStatus orderStatus) {

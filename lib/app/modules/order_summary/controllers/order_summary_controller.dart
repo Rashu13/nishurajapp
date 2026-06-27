@@ -10,6 +10,10 @@ import '../../../core/controllers/global_data_controller.dart';
 class OrderSummaryController extends GetxController {
   final BillService _billService = BillService();
   
+  // NC Billing constants
+  static const double NC_BILLING_DISCOUNT_PERCENTAGE = 0.35;
+  static const int NC_BILLING_BILL_TYPE = 2;
+  
   var tableNumber = '01'.obs;
   var orderItems = <Map<String, dynamic>>[].obs;
   var remarkText = ''.obs;
@@ -35,6 +39,24 @@ class OrderSummaryController extends GetxController {
       return sum + ((double.tryParse(menuItem.restrorate) ?? 0.0) * quantity);
     });
     return double.parse(total.toStringAsFixed(2));
+  }
+  
+  /// Get discounted total if NC Billing is selected
+  double get displayTotal {
+    final billType = selectedTable.value?.roomTypeId ?? 1;
+    if (billType == NC_BILLING_BILL_TYPE) {
+      return double.parse((totalAmount * NC_BILLING_DISCOUNT_PERCENTAGE).toStringAsFixed(2));
+    }
+    return totalAmount;
+  }
+  
+  /// Get discount amount in rupees
+  double get discountAmount {
+    final billType = selectedTable.value?.roomTypeId ?? 1;
+    if (billType == NC_BILLING_BILL_TYPE) {
+      return double.parse((totalAmount - displayTotal).toStringAsFixed(2));
+    }
+    return 0.0;
   }
   
   void updateTableNumber(String number) {
@@ -85,6 +107,7 @@ class OrderSummaryController extends GetxController {
       // Send bill to kitchen via API
       final result = await _billService.sendBillToKitchen(
         tableId: tableId,
+        billType: selectedTable.value?.roomTypeId ?? 1,
         orderItems: orderItems.toList(),
         remarks: remarkText.value,
       );

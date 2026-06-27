@@ -1,13 +1,12 @@
 import 'package:get/get.dart';
 import '../../../data/models/menu_model.dart';
 import '../../../data/models/order.dart';
-import '../../../data/repositories/order_repository.dart';
 import '../../../routes/app_routes.dart';
 import '../../../core/controllers/global_data_controller.dart';
 import '../../../core/utils/toast_helper.dart';
 
 class OrderController extends GetxController {
-  final OrderRepository _orderRepository = OrderRepository();
+  
   
   var cartItems = <MenuModel, int>{}.obs;
   var isLoading = false.obs;
@@ -73,7 +72,7 @@ class OrderController extends GetxController {
         customerPhone: customerPhone.value,
       );
 
-      await _orderRepository.createOrder(order);
+     
       
       // Notify global controller about new order (affects table status)
       try {

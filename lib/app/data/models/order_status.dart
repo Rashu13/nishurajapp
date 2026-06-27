@@ -1,6 +1,7 @@
 class OrderStatus {
   final String id;
   final String tableNumber;
+  final int billType; // 1=Restaurant, 2=NC Billing, 3+=Room
   final List<OrderItem> items;
   final DateTime createdAt;
   final String status; // 'pending', 'in_progress', 'served', 'not_prepared'
@@ -8,6 +9,7 @@ class OrderStatus {
   OrderStatus({
     required this.id,
     required this.tableNumber,
+    required this.billType,
     required this.items,
     required this.createdAt,
     required this.status,
@@ -17,6 +19,7 @@ class OrderStatus {
     return OrderStatus(
       id: json['id'],
       tableNumber: json['table_number'],
+      billType: json['bill_type'] ?? 1,
       items: (json['items'] as List)
           .map((item) => OrderItem.fromJson(item))
           .toList(),
@@ -29,6 +32,7 @@ class OrderStatus {
     return {
       'id': id,
       'table_number': tableNumber,
+      'bill_type': billType,
       'items': items.map((item) => item.toJson()).toList(),
       'created_at': createdAt.toIso8601String(),
       'status': status,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/bill.dart';
-import '../../../data/repositories/billing_repository.dart';
+
 
 class BillingController extends GetxController {
-  final BillingRepository _repository = BillingRepository();
+ 
   
   final Rx<Bill?> bill = Rx<Bill?>(null);
   final RxBool isLoading = false.obs;
@@ -22,8 +22,8 @@ class BillingController extends GetxController {
   Future<void> generateBill(String orderId) async {
     try {
       isLoading.value = true;
-      final generatedBill = await _repository.generateBill(orderId);
-      bill.value = generatedBill;
+      //final generatedBill = await _repository.generateBill(orderId);
+   ///   bill.value = generatedBill;
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -42,7 +42,7 @@ class BillingController extends GetxController {
     
     try {
       isProcessingPayment.value = true;
-      await _repository.processBillPayment(bill.value!.id, paymentMethod);
+    //  await _repository.processBillPayment(bill.value!.id, paymentMethod);
       
       Get.snackbar(
         'Success',
@@ -73,7 +73,7 @@ class BillingController extends GetxController {
     if (bill.value == null) return;
     
     try {
-      await _repository.printBill(bill.value!.id);
+     // await _repository.printBill(bill.value!.id);
       Get.snackbar(
         'Success',
         'Bill sent to printer',

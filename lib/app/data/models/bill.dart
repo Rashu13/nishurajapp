@@ -11,7 +11,10 @@ class Bill {
   final double gst;
   final double total;
   final DateTime createdAt;
+  final DateTime billDate; // Bill creation date from API
+  final int billType; // 1=Restaurant, 2=NC Billing, 3+=Room
   final String status; // 'pending', 'paid', 'cancelled'
+  final bool billStatus; // true = paid/completed, false = active/running
 
   Bill({
     required this.id,
@@ -26,8 +29,11 @@ class Bill {
     this.gst = 0.0,
     required this.total,
     required this.createdAt,
+    DateTime? billDate,
+    this.billType = 1,
     this.status = 'pending',
-  });
+    this.billStatus = false,
+  }) : billDate = billDate ?? createdAt;
 
   factory Bill.fromJson(Map<String, dynamic> json) {
     return Bill(
@@ -45,7 +51,10 @@ class Bill {
       gst: json['gst']?.toDouble() ?? 0.0,
       total: json['total'].toDouble(),
       createdAt: DateTime.parse(json['created_at']),
+      billDate: json['bill_date'] != null ? DateTime.parse(json['bill_date']) : null,
+      billType: json['bill_type'] ?? 1,
       status: json['status'] ?? 'pending',
+      billStatus: json['billStatus'] ?? json['bill_status'] ?? false,
     );
   }
 
@@ -63,7 +72,10 @@ class Bill {
       'gst': gst,
       'total': total,
       'created_at': createdAt.toIso8601String(),
+      'bill_date': billDate.toIso8601String(),
+      'bill_type': billType,
       'status': status,
+      'billStatus': billStatus,
     };
   }
 }

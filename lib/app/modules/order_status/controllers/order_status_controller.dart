@@ -12,6 +12,9 @@ class OrderStatusController extends GetxController {
   final RxList<OrderStatus> orderStatuses = <OrderStatus>[].obs;
   final RxBool isLoading = false.obs;
   final RxString searchQuery = ''.obs;
+  
+  // Room type filter
+  final RxString selectedRoomFilter = 'all'.obs; // all, restaurant, ncBilling, room
 
 
 
@@ -26,7 +29,27 @@ class OrderStatusController extends GetxController {
     try {
       isLoading.value = true;
       final statuses = await _repository.getOrderStatuses();
-      orderStatuses.assignAll(statuses);
+      
+      // Filter orders from current shift (3 AM today to 3 AM tomorrow)
+      final now = DateTime.now();
+      final shiftStartTime = DateTime(
+        now.hour >= 3 ? now.year : now.subtract(const Duration(days: 1)).year,
+        now.hour >= 3 ? now.month : now.subtract(const Duration(days: 1)).month,
+        now.hour >= 3 ? now.day : now.subtract(const Duration(days: 1)).day,
+        3, 0, 0, // 3 AM
+      );
+      final shiftEndTime = shiftStartTime.add(const Duration(hours: 24));
+      
+      print('🕐 Current Shift: ${shiftStartTime.toString()} to ${shiftEndTime.toString()}');
+      
+      final filteredStatuses = statuses.where((order) {
+        return order.createdAt.isAfter(shiftStartTime) && 
+               order.createdAt.isBefore(shiftEndTime);
+      }).toList();
+      
+      print('📊 Filtered ${filteredStatuses.length} orders from ${statuses.length} total');
+      
+      orderStatuses.assignAll(filteredStatuses);
     } catch (e) {
       ToastHelper.showError('Failed to load order statuses: $e');
     } finally {
@@ -35,14 +58,65 @@ class OrderStatusController extends GetxController {
   }
 
   List<OrderStatus> get filteredOrderStatuses {
-    if (searchQuery.value.isEmpty) {
-      return orderStatuses;
+    List<OrderStatus> filtered = searchQuery.value.isEmpty
+        ? orderStatuses.toList()
+        : orderStatuses
+            .where((order) => order.tableNumber
+                .toLowerCase()
+                .contains(searchQuery.value.toLowerCase()))
+            .toList();
+    
+    // Apply room type filter based on BillType
+    if (selectedRoomFilter.value != 'all') {
+      print('🔍 Applying filter: ${selectedRoomFilter.value}');
+      filtered = filtered.where((order) {
+        print('  Table ${order.tableNumber}: BillType = ${order.billType}');
+        switch (selectedRoomFilter.value) {
+          case 'restaurant':
+            return order.billType == 1;
+          case 'ncBilling':
+            return order.billType == 2;
+          case 'room':
+            return order.billType >= 3;
+          default:
+            return true;
+        }
+      }).toList();
+      print('✅ Filtered to ${filtered.length} orders');
     }
-    return orderStatuses
-        .where((order) => order.tableNumber
-            .toLowerCase()
-            .contains(searchQuery.value.toLowerCase()))
-        .toList();
+    
+    // Group by table number and sort
+    Map<String, List<OrderStatus>> groupedByTable = {};
+    for (var order in filtered) {
+      if (!groupedByTable.containsKey(order.tableNumber)) {
+        groupedByTable[order.tableNumber] = [];
+      }
+      groupedByTable[order.tableNumber]!.add(order);
+    }
+    
+    // Sort table numbers
+    final sortedTableNumbers = groupedByTable.keys.toList()
+      ..sort((a, b) {
+        // Try to parse as numbers for proper numeric sorting
+        final aNum = int.tryParse(a);
+        final bNum = int.tryParse(b);
+        if (aNum != null && bNum != null) {
+          return aNum.compareTo(bNum);
+        }
+        return a.compareTo(b);
+      });
+    
+    // Flatten back to list with grouped orders
+    List<OrderStatus> result = [];
+    for (var tableNumber in sortedTableNumbers) {
+      result.addAll(groupedByTable[tableNumber]!);
+    }
+    
+    return result;
+  }
+  
+  void selectRoomFilter(String filter) {
+    selectedRoomFilter.value = filter;
   }
 
   void searchTable(String query) {
@@ -112,6 +186,7 @@ class OrderStatusController extends GetxController {
             orderStatuses[orderIndex] = OrderStatus(
               id: order.id,
               tableNumber: order.tableNumber,
+              billType: order.billType,
               items: updatedItems,
               createdAt: order.createdAt,
               status: order.status,
@@ -177,6 +252,7 @@ class OrderStatusController extends GetxController {
           orderStatuses[orderIndex] = OrderStatus(
             id: order.id,
             tableNumber: order.tableNumber,
+            billType: order.billType,
             items: updatedItems,
             createdAt: order.createdAt,
             status: order.status,

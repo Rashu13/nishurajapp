@@ -11,6 +11,7 @@ class BillGenerationController extends GetxController {
   var billsList = <Bill>[].obs;
   var isLoading = false.obs;
   var searchText = ''.obs;
+  final RxString selectedBillTypeFilter = 'all'.obs; // all, restaurant, ncBilling, room
 
   @override
   void onInit() {
@@ -45,7 +46,7 @@ class BillGenerationController extends GetxController {
       
       // Debug each bill's status
       for (var bill in bills) {
-        print('📋 Bill ${bill.tableNumber}: status="${bill.status}", orderId=${bill.orderId}');
+        print('📋 Bill ${bill.tableNumber}: billStatus=${bill.billStatus}, orderId=${bill.orderId}');
       }
       
     } catch (e) {
@@ -61,25 +62,56 @@ class BillGenerationController extends GetxController {
   }
 
   List<Bill> get filteredBills {
-    // First filter by search text
-    List<Bill> filtered = searchText.value.isEmpty 
-      ? billsList 
-      : billsList.where((bill) => 
-          bill.tableNumber.toLowerCase().contains(searchText.value.toLowerCase())
-        ).toList();
+    // Filter by shift (3 AM to 3 AM)
+    final now = DateTime.now();
+    final shiftStartTime = DateTime(
+      now.hour >= 3 ? now.year : now.subtract(const Duration(days: 1)).year,
+      now.hour >= 3 ? now.month : now.subtract(const Duration(days: 1)).month,
+      now.hour >= 3 ? now.day : now.subtract(const Duration(days: 1)).day,
+      3, 0, 0, // 3 AM
+    );
+    final shiftEndTime = shiftStartTime.add(const Duration(hours: 24));
     
-    // Separate active and completed bills
-    List<Bill> activeBills = filtered.where((bill) => 
-      bill.status.toLowerCase() == 'running' || bill.status.toLowerCase() == 'active'
-    ).toList();
+    print('🕐 Bill Gen Shift: ${shiftStartTime.toString()} to ${shiftEndTime.toString()}');
     
-    List<Bill> completedBills = filtered.where((bill) => 
-      bill.status.toLowerCase() == 'completed'
-    ).toList();
+    // Filter by billStatus=false (active bills only), shift time, bill type, and search text
+    List<Bill> filtered = billsList.where((bill) {
+      // Must have billStatus == false (active/running)
+      bool isActive = bill.billStatus == false;
+      
+      // Must be within current shift
+      bool isInShift = bill.billDate.isAfter(shiftStartTime) && 
+                       bill.billDate.isBefore(shiftEndTime);
+      
+      // Must match bill type filter
+      bool matchesBillType = true;
+      if (selectedBillTypeFilter.value != 'all') {
+        switch (selectedBillTypeFilter.value) {
+          case 'restaurant':
+            matchesBillType = bill.billType == 1;
+            break;
+          case 'ncBilling':
+            matchesBillType = bill.billType == 2;
+            break;
+          case 'room':
+            matchesBillType = bill.billType >= 3;
+            break;
+        }
+      }
+      
+      // Must match search text if provided
+      bool matchesSearch = searchText.value.isEmpty 
+        ? true
+        : bill.tableNumber.toLowerCase().contains(searchText.value.toLowerCase());
+      
+      return isActive && isInShift && matchesBillType && matchesSearch;
+    }).toList();
     
-    // Group active bills by table number
+    print('📊 Bill Gen: Filtered ${filtered.length} bills from ${billsList.length} total');
+    
+    // Group bills by table number
     Map<String, List<Bill>> groupedByTable = {};
-    for (var bill in activeBills) {
+    for (var bill in filtered) {
       if (!groupedByTable.containsKey(bill.tableNumber)) {
         groupedByTable[bill.tableNumber] = [];
       }
@@ -92,14 +124,15 @@ class BillGenerationController extends GetxController {
       result.addAll(bills);
     });
     
-    // Add completed bills at the end
-    result.addAll(completedBills);
-    
     return result;
   }
 
   void selectBill(Bill bill) {
     Get.toNamed('/bill_detail', arguments: bill);
+  }
+  
+  void selectBillTypeFilter(String filter) {
+    selectedBillTypeFilter.value = filter;
   }
 
   Future<void> resetTable(Bill bill) async {

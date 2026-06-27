@@ -42,6 +42,7 @@ class MenuView extends GetView<MenuPageController> {
                 border: Border.all(color: Colors.grey[300]!),
               ),
               child: TextField(
+                controller: controller.searchController,
                 onChanged: controller.updateSearchQuery,
                 decoration: InputDecoration(
                   hintText: 'Search menu items...',
@@ -50,7 +51,6 @@ class MenuView extends GetView<MenuPageController> {
                   suffixIcon: Obx(() => controller.searchQuery.value.isNotEmpty
                       ? IconButton(
                           onPressed: controller.clearSearch,
-      
                           icon: Icon(Icons.clear, color: Colors.grey[600]),
                         )
                       : const SizedBox.shrink()),

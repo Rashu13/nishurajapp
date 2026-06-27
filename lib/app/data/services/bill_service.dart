@@ -5,9 +5,37 @@ import '../models/menu_model.dart';
 class BillService {
   final ApiService _apiService = ApiService();
   
+  // NC Billing discount: 65% off = 35% of original price
+  static const double NC_BILLING_DISCOUNT_PERCENTAGE = 0.35;
+  static const int NC_BILLING_BILL_TYPE = 2;
+  
+  /// Convert billType integer to OrderType string name
+  String _getOrderTypeName(int billType) {
+    switch (billType) {
+      case 1:
+        return "Restaurant";
+      case 2:
+        return "NC Billing";
+      case 3:
+      default:
+        return "Room";
+    }
+  }
+  
+  /// Apply NC Billing discount if applicable
+  /// For BillType=2 (NC Billing), rate is reduced to 35% of original
+  double _applyNCDiscount(double rate, int billType) {
+    if (billType == NC_BILLING_BILL_TYPE) {
+      final discountedRate = rate * NC_BILLING_DISCOUNT_PERCENTAGE;
+      return discountedRate;
+    }
+    return rate;
+  }
+  
   // KOT Management Methods
   Future<Map<String, dynamic>> sendKOTToKitchen({
     required int tableId,
+    required int billType,
     required List<Map<String, dynamic>> orderItems,
     required String remarks,
     int paxNo = 1,
@@ -110,6 +138,7 @@ class BillService {
           "RemarksMaster": remarks.isEmpty ? "App" : remarks,
           "BillStatus": false,
           "PrintStatus": false,
+          "BillType": billType,
         },
         "KOTDetails": kotDetails
       };
@@ -228,7 +257,7 @@ class BillService {
           "NetAmt": double.parse(itemNetAmt.toStringAsFixed(2)),
           "Remarks": "APP",
           "UserID": SessionManager.currentUserId ?? 1,
-          "SessionID": SessionManager.currentCSession ?? 3,
+          "SessionID": SessionManager.currentCSession ?? 4,
           "Status": false,
           "OrderStatus": false,
           "TableID": tableId,
@@ -315,6 +344,7 @@ class BillService {
   
   Future<Map<String, dynamic>> sendBillToKitchen({
     required int tableId,
+    required int billType,
     required List<Map<String, dynamic>> orderItems,
     required String remarks,
   }) async {
@@ -341,7 +371,11 @@ class BillService {
         final customizations = item['customizations'] as List<String>? ?? [];
         
         final rate = double.tryParse(menuItem.restrorate) ?? 0.0;
-        final amt = double.parse((rate * quantity).toStringAsFixed(2));
+        
+        // Apply NC Billing discount if BillType = 2
+        final finalRate = _applyNCDiscount(rate, billType);
+        
+        final amt = double.parse((finalRate * quantity).toStringAsFixed(2));
         final itemGst = double.parse((amt * 0.05).toStringAsFixed(2)); // 5% GST
         final itemTaxAmt = itemGst;
         final itemNetAmt = double.parse((amt + itemTaxAmt).toStringAsFixed(2));
@@ -356,7 +390,7 @@ class BillService {
           "KotNumber": kotNumber, // Use generated number
           "OrderNo": orderNo,     // Use generated number
           "ItemID": menuItem.itemId,
-          "Rate": double.parse(rate.toStringAsFixed(2)),
+          "Rate": double.parse(finalRate.toStringAsFixed(2)),
           "Qty": quantity.toDouble(),
           "Amt": double.parse(amt.toStringAsFixed(2)),
           "GST": double.parse(itemGst.toStringAsFixed(2)),
@@ -364,7 +398,7 @@ class BillService {
           "NetAmt": double.parse(itemNetAmt.toStringAsFixed(2)),
           "Remarks": customizations.isEmpty ? "" : customizations.join(', '),
           "UserID": SessionManager.currentUserId ?? 1, // Use SessionManager for UserID
-          "SessionID": SessionManager.currentCSession ?? 3, // Use CSession from SessionManager
+          "SessionID": SessionManager.currentCSession ?? 4, // Use CSession from SessionManager
           "Status": false,
           "OrderStatus": false,
           "TableID": tableId,
@@ -388,11 +422,12 @@ class BillService {
           "TaxAmt": totalTaxAmt, // sum of all items TaxAmt
           "TotalAmt": totalAmt,
           "UserID": SessionManager.currentUserId ?? 1, // Use SessionManager for UserID
-          "SessionID": SessionManager.currentCSession ?? 3, // Use CSession from SessionManager
+          "SessionID": SessionManager.currentCSession ?? 4, // Use CSession from SessionManager
           "Status": false,
           "RemarksMaster": remarks.isEmpty ? "" : remarks,
           "BillStatus": false,
           "PrintStatus": false,
+          "OrderType": _getOrderTypeName(billType), // Convert billType to name: Restaurant/NC Billing/Room
         },
         "KOTDetails": kotDetails
       };
@@ -402,6 +437,11 @@ class BillService {
       print('📤 FULL REQUEST BODY TO /api/kot');
       print('========================================');
       print('TableID: ${kotRequest['KOTMaster']['TableID']}');
+      print('BillType ID: $billType');
+      print('OrderType Name: ${_getOrderTypeName(billType)}');
+      if (billType == NC_BILLING_BILL_TYPE) {
+        print('💰 NC BILLING DISCOUNT APPLIED: 65% OFF (35% of original price)');
+      }
       print('Status: ${kotRequest['KOTMaster']['Status']}');
       print('BillStatus: ${kotRequest['KOTMaster']['BillStatus']}');
       print('PrintStatus: ${kotRequest['KOTMaster']['PrintStatus']}');
@@ -458,7 +498,7 @@ class BillService {
           "TaxAmt": 1.1,
           "TotalAmt": 1.1,
           "UserID": SessionManager.currentUserId ?? 1,
-          "SessionID": SessionManager.currentCSession ?? 3,
+          "SessionID": SessionManager.currentCSession ?? 4,
           "Status": false,
           "RemarksMaster": "sample string 3",
           "BillStatus": false,
@@ -478,7 +518,7 @@ class BillService {
             "NetAmt": 1.1,
             "Remarks": "sample string 2",
             "UserID": SessionManager.currentUserId ?? 1,
-            "SessionID": SessionManager.currentCSession ?? 3,
+            "SessionID": SessionManager.currentCSession ?? 4,
             "Status": false,
             "OrderStatus": false,
             "TableID": 1
@@ -496,7 +536,7 @@ class BillService {
             "NetAmt": 1.1,
             "Remarks": "sample string 2",
             "UserID": SessionManager.currentUserId ?? 1,
-            "SessionID": SessionManager.currentCSession ?? 3,
+            "SessionID": SessionManager.currentCSession ?? 4,
             "Status": false,
             "OrderStatus": false,
             "TableID": 1

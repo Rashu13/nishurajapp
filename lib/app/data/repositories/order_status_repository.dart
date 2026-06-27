@@ -7,9 +7,12 @@ class OrderStatusRepository {
     try {
       // First get individual bills to identify running orders
       final billsData = await BillApiProvider.fetchTableBillSummary();
-      final runningBills = billsData.where((bill) => 
-        bill['Status']?.toString().toLowerCase() == 'running'
-      ).toList();
+      final runningBills = billsData.where((bill) {
+        // Match bill generation logic: billStatus == false means active/running
+        final billStatus = bill['billStatus'] ?? bill['bill_status'] ?? false;
+        final statusStr = bill['Status']?.toString().toLowerCase() ?? '';
+        return billStatus == false || statusStr == 'running';
+      }).toList();
       
       if (runningBills.isEmpty) {
         return []; // No running orders
@@ -26,17 +29,31 @@ class OrderStatusRepository {
   }
 
   List<OrderStatus> _parseOrderStatusList(List<dynamic> itemsData, List<dynamic> runningBills) {
-    // Get table IDs of running bills
-    final runningTableIds = runningBills.map((bill) => bill['TableID']).toSet();
+    // Get table names of running bills and create a map of TableName -> BillType
+    final runningTableNames = <String>{};
+    final tableBillTypeMap = <String, String>{}; // Map TableName to BillType
+    
+    for (var bill in runningBills) {
+      final tableName = bill['TableName']?.toString().trim();
+      if (tableName == null || tableName.isEmpty) continue;
+      final billType = bill['BillType'] ?? bill['OrderType'];
+      runningTableNames.add(tableName.toLowerCase());
+      if (billType != null) {
+        tableBillTypeMap[tableName.toLowerCase()] = billType.toString();
+      }
+    }
     
     // Filter items to only include those from running tables
     final runningItemsData = itemsData.where((item) {
       final map = Map<String, dynamic>.from(item);
-      final tableId = map['TableID'];
+      final tableName = map['TableName']?.toString().trim();
       final kotStatus = map['KOTStatus'] ?? '';
       
       // Include items from running tables that are not already billed
-      return runningTableIds.contains(tableId) && kotStatus != 'Billed';
+      return tableName != null && 
+             tableName.isNotEmpty && 
+             runningTableNames.contains(tableName.toLowerCase()) && 
+             kotStatus != 'Billed';
     }).toList();
     
     // Group items by TableID+OrderNo to create OrderStatus objects
@@ -50,9 +67,41 @@ class OrderStatusRepository {
     return grouped.entries.map((entry) {
       final items = entry.value;
       final first = items.first;
+      final tableName = first['TableName']?.toString().trim();
+      
+      // Get BillType from the bills data using TableName
+      final billTypeRaw = (tableName != null && tableName.isNotEmpty) 
+          ? tableBillTypeMap[tableName.toLowerCase()] 
+          : null;
+      print('🏠 Table: ${first['TableName']}, BillType from bills: $billTypeRaw');
+      
+      // Convert BillType to int
+      int billType = 1; // Default to Restaurant
+      if (billTypeRaw != null) {
+        // Map string values to integer codes
+        switch (billTypeRaw.toLowerCase().trim()) {
+          case 'restaurant':
+            billType = 1;
+            break;
+          case 'nc billing':
+          case 'ncbilling':
+            billType = 2;
+            break;
+          case 'room':
+            billType = 3;
+            break;
+          default:
+            // Try to parse as number if it's a numeric string
+            billType = int.tryParse(billTypeRaw) ?? 1;
+        }
+      }
+      
+      print('  → Mapped to billType: $billType');
+      
       return OrderStatus(
         id: entry.key,
         tableNumber: first['TableName'] ?? '',
+        billType: billType,
         items: items.map((i) => OrderItem(
           id: i['KOTDID'].toString(), // Use KOTDID instead of ItemID for delete operations
           name: i['ItemName'] ?? '',

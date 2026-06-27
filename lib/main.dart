@@ -5,11 +5,19 @@ import 'app/routes/app_routes.dart';
 import 'app/routes/app_pages.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/core/controllers/global_data_controller.dart';
+import 'app/core/services/encrypted_storage_service.dart';
+import 'app/core/config/api_config.dart';
 import 'app/data/services/bill_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize storage
   await GetStorage.init();
+  await EncryptedStorageService.initialize();
+  
+  // Initialize API Config from encrypted storage
+  await ApiConfig.initialize();
   
   // Initialize global data controller
   Get.put(GlobalDataController(), permanent: true);

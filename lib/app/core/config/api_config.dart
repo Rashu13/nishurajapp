@@ -1,26 +1,33 @@
+import '../services/encrypted_storage_service.dart';
+
 /// Centralized API Configuration
 /// This file contains all API endpoints to avoid URL repetition across the project
 class ApiConfig {
-  // Base URLs
-  static const String baseUrl = 'http://192.168.1.238';
-  //static const String baseUrl = 'http://192.168.1.222';
+  // Base URLs - Now loaded from encrypted storage
+  static late String baseUrl;
   
-  static const String apiBaseUrl = '$baseUrl/api';
+  /// Initialize API config from encrypted storage
+  static Future<void> initialize() async {
+    baseUrl = EncryptedStorageService().getApiBaseUrl();
+    print('🔧 ApiConfig initialized with baseUrl: $baseUrl');
+  }
+  
+  static String get apiBaseUrl => '$baseUrl/api';
   
   // Authentication
-  static const String loginEndpoint = '$apiBaseUrl/login';
+  static String get loginEndpoint => '$apiBaseUrl/login';
   
   // KOT (Kitchen Order Ticket) APIs
-  static const String kotBaseUrl = '$apiBaseUrl/kot';
-  static const String activeTableItems = '$kotBaseUrl/active-table-items';
-  static const String deleteSimpleItem = '$kotBaseUrl/item/delete-simple';
-  static const String updateItemQty = '$kotBaseUrl/item/qty';
-  static const String individualTableBills = '$kotBaseUrl/individual-table-bills';
-  static const String resetTable = '$kotBaseUrl/table/reset';
+  static String get kotBaseUrl => '$apiBaseUrl/kot';
+  static String get activeTableItems => '$kotBaseUrl/active-table-items';
+  static String get deleteSimpleItem => '$kotBaseUrl/item/delete-simple';
+  static String get updateItemQty => '$kotBaseUrl/item/qty';
+  static String get individualTableBills => '$kotBaseUrl/individual-table-bills';
+  static String get resetTable => '$kotBaseUrl/table/reset';
   
   // Analytics APIs
-  static const String analyticsSummary = '$kotBaseUrl/analytics/summary';
-  static const String ordersServed = '$kotBaseUrl/analytics/orders-served';
+  static String get analyticsSummary => '$kotBaseUrl/analytics/summary';
+  static String get ordersServed => '$kotBaseUrl/analytics/orders-served';
   
   // Environment Configuration
   static bool get isDevelopment => baseUrl.contains('192.168');
